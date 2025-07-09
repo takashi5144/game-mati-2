@@ -47,7 +47,7 @@ export class UIManager {
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = btn.dataset.tool;
-                this.game.setCurrentTool(tool);
+                this.game.toolSystem.selectTool(tool);
             });
         });
         
@@ -334,7 +334,7 @@ export class UIManager {
         this.selectionBox.style.display = 'block';
     }
 
-    updateSelectionBox(startX, startY, currentX, currentY) {
+    updateSelectionBoxCoords(startX, startY, currentX, currentY) {
         if (!this.selectionBox) return;
         
         const left = Math.min(startX, currentX);
@@ -353,14 +353,76 @@ export class UIManager {
             this.selectionBox.style.display = 'none';
         }
     }
+    
+    // 選択ボックスの更新（InputHandlerから呼ばれる）
+    updateSelectionBox(start, end) {
+        const rect = this.game.renderer.domElement.getBoundingClientRect();
+        this.updateSelectionBoxCoords(
+            start.x + rect.left,
+            start.y + rect.top,
+            end.x + rect.left,
+            end.y + rect.top
+        );
+    }
+    
+    clearSelectionBox() {
+        this.hideSelectionBox();
+    }
+    
+    // ツール選択の更新
+    updateToolSelection(toolId) {
+        // すべてのツールボタンの選択状態をクリア
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // 選択されたツールボタンをアクティブに
+        if (toolId) {
+            const activeBtn = document.querySelector(`[data-tool="${toolId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+    }
 
     // メニュー関連
     toggleBuildMenu() {
         // TODO: 建設メニューの表示/非表示
     }
+    
+    openBuildMenu() {
+        const buildCategory = document.querySelector('[data-category="build"]');
+        if (buildCategory) {
+            buildCategory.classList.add('expanded');
+        }
+    }
+    
+    openResidentPanel() {
+        this.showWindow('resident');
+    }
 
     toggleResidentPanel() {
         this.toggleWindow('resident');
+    }
+    
+    // 建物選択
+    selectBuilding(building) {
+        if (!building) {
+            this.hideSelectionInfo();
+            return;
+        }
+        
+        this.showBuildingInfo(building);
+    }
+    
+    // 住民選択
+    selectResident(resident) {
+        if (!resident) {
+            this.hideSelectionInfo();
+            return;
+        }
+        
+        this.showResidentInfo(resident);
     }
 
     // 更新処理

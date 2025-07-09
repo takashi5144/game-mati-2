@@ -1,8 +1,7 @@
 // ゲームのメインクラス
 import { Renderer } from './Renderer.js';
 import { SceneManager } from './SceneManager.js';
-import { CameraController } from './CameraController.js';
-import { InputManager } from './InputManager.js';
+import { InputHandler } from './InputHandler.js';
 import { UIManager } from '../ui/UIManager.js';
 import { ResourceManager } from '../systems/ResourceManager.js';
 import { BuildingSystem } from '../systems/BuildingSystem.js';
@@ -10,6 +9,7 @@ import { ResidentSystem } from '../systems/ResidentSystem.js';
 import { TimeSystem } from '../systems/TimeSystem.js';
 import { TerrainGenerator } from '../world/TerrainGenerator.js';
 import { EventSystem } from '../systems/EventSystem.js';
+import { ToolSystem } from '../systems/ToolSystem.js';
 
 export class Game {
     constructor(config) {
@@ -24,8 +24,9 @@ export class Game {
         // コアシステム
         this.renderer = null;
         this.sceneManager = null;
-        this.cameraController = null;
-        this.inputManager = null;
+        this.inputHandler = null;
+        this.ui = null;
+        this.toolSystem = null;
         
         // ゲームシステム
         this.uiManager = null;
@@ -53,21 +54,16 @@ export class Game {
         this.sceneManager = new SceneManager();
         this.sceneManager.init();
         
-        // カメラコントローラーの初期化
-        this.cameraController = new CameraController(
-            this.renderer.camera,
-            this.renderer.domElement,
-            this.config.CONTROLS.MOUSE
-        );
+        // 入力ハンドラーの初期化
+        this.inputHandler = new InputHandler(this);
         
-        // 入力管理の初期化
-        this.inputManager = new InputManager(this.config.CONTROLS);
-        this.inputManager.init(this.renderer.domElement);
-        this.setupInputHandlers();
+        // ツールシステムの初期化
+        this.toolSystem = new ToolSystem(this);
         
         // UI管理の初期化
-        this.uiManager = new UIManager(this);
-        this.uiManager.init();
+        this.ui = new UIManager(this);
+        this.ui.init();
+        this.uiManager = this.ui; // 互換性のため
         
         // ゲームシステムの初期化
         await this.initGameSystems();
@@ -184,114 +180,13 @@ export class Game {
         this.residentSystem.spawnResident(centerX + 2, centerZ, 'none', '住民②');
         
         // リソースを更新
-        this.uiManager.updateResourceDisplay(this.resourceManager.resources);
-        this.uiManager.updatePopulation(
+        this.ui.updateResourceDisplay(this.resourceManager.resources);
+        this.ui.updatePopulation(
             this.residentSystem.getPopulation(),
             this.residentSystem.getMaxPopulation()
         );
     }
 
-    setupInputHandlers() {
-        // マウスイベント
-        this.inputManager.on('mousedown', (e) => this.onMouseDown(e));
-        this.inputManager.on('mouseup', (e) => this.onMouseUp(e));
-        this.inputManager.on('mousemove', (e) => this.onMouseMove(e));
-        this.inputManager.on('wheel', (e) => this.onMouseWheel(e));
-        this.inputManager.on('click', (e) => this.onClick(e));
-        
-        // キーボードイベント
-        this.inputManager.on('keydown', (e) => this.onKeyDown(e));
-        
-        // タッチイベント（モバイル対応）
-        this.inputManager.on('touchstart', (e) => this.onTouchStart(e));
-        this.inputManager.on('touchmove', (e) => this.onTouchMove(e));
-        this.inputManager.on('touchend', (e) => this.onTouchEnd(e));
-    }
-
-    // マウスイベントハンドラー
-    onMouseDown(event) {
-        if (event.button === 0) { // 左クリック
-            if (this.currentTool && this.isAreaTool(this.currentTool)) {
-                this.startAreaSelection(event);
-            }
-        }
-        this.cameraController.onMouseDown(event);
-    }
-
-    onMouseUp(event) {
-        if (this.isSelectingArea) {
-            this.completeAreaSelection();
-        }
-        this.cameraController.onMouseUp(event);
-    }
-
-    onMouseMove(event) {
-        if (this.isSelectingArea) {
-            this.updateAreaSelection(event);
-        }
-        this.cameraController.onMouseMove(event);
-        
-        // ホバー効果の更新
-        this.updateHoverEffect(event);
-    }
-
-    onMouseWheel(event) {
-        this.cameraController.onMouseWheel(event);
-    }
-
-    onClick(event) {
-        if (event.button === 2) { // 右クリック
-            this.cancelCurrentTool();
-            return;
-        }
-        
-        if (event.button === 0 && !this.cameraController.isDragging) { // 左クリック
-            this.handleClick(event);
-        }
-    }
-
-    // キーボードイベントハンドラー
-    onKeyDown(event) {
-        const key = event.key.toUpperCase();
-        const action = this.config.CONTROLS.KEYBOARD[key];
-        
-        if (!action) return;
-        
-        switch (action) {
-            case 'pause_toggle':
-                this.togglePause();
-                break;
-            case 'speed_normal':
-                this.setGameSpeed(this.config.GAME.SPEED.NORMAL);
-                break;
-            case 'speed_fast':
-                this.setGameSpeed(this.config.GAME.SPEED.FAST);
-                break;
-            case 'speed_very_fast':
-                this.setGameSpeed(this.config.GAME.SPEED.VERY_FAST);
-                break;
-            case 'toggle_build_menu':
-                this.uiManager.toggleBuildMenu();
-                break;
-            case 'toggle_resident_panel':
-                this.uiManager.toggleResidentPanel();
-                break;
-            case 'cancel':
-                this.cancelCurrentTool();
-                break;
-            default:
-                // カメラコントロール
-                if (action.startsWith('camera_')) {
-                    this.cameraController.handleKeyboard(action);
-                }
-                // ツールショートカット
-                else if (action.startsWith('tool_')) {
-                    const tool = action.replace('tool_', '');
-                    this.setCurrentTool(tool);
-                }
-                break;
-        }
-    }
 
     // ゲームループ
     start() {
@@ -323,8 +218,8 @@ export class Game {
     }
 
     update(deltaTime) {
-        // カメラの更新
-        this.cameraController.update(deltaTime);
+        // 入力の更新
+        this.inputHandler.update(deltaTime);
         
         // ゲームシステムの更新
         this.timeSystem.update(deltaTime);
@@ -334,7 +229,7 @@ export class Game {
         this.eventSystem.update(deltaTime);
         
         // UIの更新
-        this.uiManager.update(deltaTime);
+        this.ui.update(deltaTime);
     }
 
     render() {
@@ -344,20 +239,20 @@ export class Game {
     // ゲーム状態管理
     togglePause() {
         this.isPaused = !this.isPaused;
-        this.uiManager.updatePauseButton(this.isPaused);
+        this.ui.updatePauseButton(this.isPaused);
         console.log(this.isPaused ? '⏸️ ゲーム一時停止' : '▶️ ゲーム再開');
     }
 
     setGameSpeed(speed) {
         this.gameSpeed = speed;
-        this.uiManager.updateSpeedButtons(speed);
+        this.ui.updateSpeedButtons(speed);
         console.log(`⏩ ゲーム速度: ${speed}x`);
     }
 
     setCurrentTool(tool) {
         this.currentTool = tool;
         this.buildMode = tool;
-        this.uiManager.updateToolSelection(tool);
+        this.ui.updateToolSelection(tool);
         
         // カーソルの更新
         const cursorType = this.getToolCursor(tool);
@@ -423,12 +318,12 @@ export class Game {
 
     handleBuildingClick(building) {
         this.selectObject(building);
-        this.uiManager.showBuildingInfo(building);
+        this.ui.showBuildingInfo(building);
     }
 
     handleResidentClick(resident) {
         this.selectObject(resident);
-        this.uiManager.showResidentInfo(resident);
+        this.ui.showResidentInfo(resident);
     }
 
     tryPlaceBuilding(x, z, buildingType) {
@@ -436,13 +331,13 @@ export class Game {
         
         // 資源チェック
         if (!this.resourceManager.canAfford(config.cost)) {
-            this.uiManager.showNotification('資源が不足しています', 'error');
+            this.ui.showNotification('資源が不足しています', 'error');
             return;
         }
         
         // 配置可能かチェック
         if (!this.buildingSystem.canPlaceAt(x, z, buildingType)) {
-            this.uiManager.showNotification('ここには建設できません', 'error');
+            this.ui.showNotification('ここには建設できません', 'error');
             return;
         }
         
@@ -450,24 +345,24 @@ export class Game {
         const building = this.buildingSystem.placeBuilding(x, z, buildingType);
         if (building) {
             this.resourceManager.consume(config.cost);
-            this.uiManager.showNotification(`${config.name}の建設を開始しました`, 'success');
+            this.ui.showNotification(`${config.name}の建設を開始しました`, 'success');
             this.hasChanges = true;
         }
     }
 
     // イベントハンドラー
     onDayChanged(day) {
-        this.uiManager.updateDate(day);
+        this.ui.updateDate(day);
     }
 
     onSeasonChanged(season) {
-        this.uiManager.updateSeason(season);
+        this.ui.updateSeason(season);
         // 季節に応じた環境変更
         this.updateEnvironmentForSeason(season);
     }
 
     onEventTriggered(event) {
-        this.uiManager.showEventNotification(event);
+        this.ui.showEventNotification(event);
         // イベントの効果を適用
         this.applyEventEffects(event);
     }
@@ -504,12 +399,12 @@ export class Game {
     startAreaSelection(event) {
         this.isSelectingArea = true;
         this.selectionStart = { x: event.clientX, y: event.clientY };
-        this.uiManager.showSelectionBox(this.selectionStart.x, this.selectionStart.y);
+        this.ui.showSelectionBox(this.selectionStart.x, this.selectionStart.y);
     }
 
     updateAreaSelection(event) {
         if (!this.isSelectingArea) return;
-        this.uiManager.updateSelectionBox(
+        this.ui.updateSelectionBoxCoords(
             this.selectionStart.x,
             this.selectionStart.y,
             event.clientX,
@@ -520,7 +415,7 @@ export class Game {
     completeAreaSelection() {
         if (!this.isSelectingArea) return;
         this.isSelectingArea = false;
-        this.uiManager.hideSelectionBox();
+        this.ui.hideSelectionBox();
         
         // エリア内のオブジェクトを処理
         // TODO: 実装

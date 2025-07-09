@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Controls Test</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+        #game-container {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>Camera Controls Test</h3>
+        <p><strong>Mouse Controls:</strong></p>
+        <ul>
+            <li>Middle Button Drag: Pan camera</li>
+            <li>Right Button Drag: Rotate camera</li>
+            <li>Scroll Wheel: Zoom in/out</li>
+        </ul>
+        <p><strong>Keyboard Controls:</strong></p>
+        <ul>
+            <li>WASD: Move camera</li>
+            <li>Q/E: Rotate camera</li>
+            <li>Space: Pause</li>
+            <li>1/2/3: Speed (1x/2x/5x)</li>
+        </ul>
+        <p><strong>Camera Info:</strong></p>
+        <div id="camera-info">Loading...</div>
+    </div>
+    <div id="game-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module">
+        import { Game } from './js/core/Game.js';
+        import { GameConfig } from './js/config/GameConfig.js';
+
+        window.game = new Game(GameConfig);
+        
+        async function init() {
+            await window.game.init();
+            window.game.start();
+            
+            // Update camera info display
+            setInterval(() => {
+                const info = window.game.inputHandler.getCameraInfo();
+                document.getElementById('camera-info').innerHTML = `
+                    Position: (${info.position.x.toFixed(1)}, ${info.position.y.toFixed(1)}, ${info.position.z.toFixed(1)})<br>
+                    Target: (${info.target.x.toFixed(1)}, ${info.target.y.toFixed(1)}, ${info.target.z.toFixed(1)})<br>
+                    Distance: ${info.distance.toFixed(1)}<br>
+                    Rotation: θ=${(info.rotation.theta * 180 / Math.PI).toFixed(1)}° φ=${(info.rotation.phi * 180 / Math.PI).toFixed(1)}°
+                `;
+            }, 100);
+        }
+        
+        init().catch(console.error);
+    </script>
+</body>
+</html>
