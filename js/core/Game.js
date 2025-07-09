@@ -15,6 +15,8 @@ import { FarmingSystem } from '../systems/FarmingSystem.js';
 import { ProductionSystem } from '../systems/ProductionSystem.js';
 import { SaveLoadSystem } from '../systems/SaveLoadSystem.js';
 import { SaveLoadUI } from '../ui/SaveLoadUI.js';
+import { WeatherSystem } from '../systems/WeatherSystem.js';
+import { WeatherUI } from '../ui/WeatherUI.js';
 
 export class Game {
     constructor(config) {
@@ -46,6 +48,8 @@ export class Game {
         this.eventSystem = null;
         this.saveLoadSystem = null;
         this.saveLoadUI = null;
+        this.weatherSystem = null;
+        this.weatherUI = null;
         
         // ゲーム状態
         this.selectedObject = null;
@@ -136,6 +140,14 @@ export class Game {
         // セーブ/ロードUI
         this.saveLoadUI = new SaveLoadUI(this.ui, this.saveLoadSystem);
         this.saveLoadUI.init();
+        
+        // 天候システム
+        this.weatherSystem = new WeatherSystem(this.sceneManager.scene, this.config.GRAPHICS.environment);
+        this.weatherSystem.init();
+        
+        // 天候UI
+        this.weatherUI = new WeatherUI(this.ui, this.weatherSystem);
+        this.weatherUI.init();
     }
 
     async generateWorld() {
@@ -163,10 +175,12 @@ export class Game {
             0x497749, // 地面の色
             0.4
         );
+        ambientLight.name = 'ambientLight';
         scene.add(ambientLight);
         
         // 太陽光
         const sunLight = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+        sunLight.name = 'sunLight';
         sunLight.position.set(50, 100, 50);
         sunLight.castShadow = true;
         
@@ -269,6 +283,7 @@ export class Game {
         
         // ゲームシステムの更新
         this.timeSystem.update(deltaTime);
+        this.weatherSystem.update(deltaTime, this.timeSystem.currentSeason);
         this.residentSystem.update(deltaTime);
         this.buildingSystem.update(deltaTime);
         this.farmingSystem.update(deltaTime);
@@ -278,6 +293,9 @@ export class Game {
         
         // UIの更新
         this.ui.update(deltaTime);
+        this.weatherUI.update();
+        const weather = this.weatherSystem.getCurrentWeatherInfo();
+        this.ui.updateWeather(weather.type);
     }
 
     render() {

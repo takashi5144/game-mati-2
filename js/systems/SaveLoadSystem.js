@@ -27,7 +27,7 @@ export class SaveLoadSystem {
             version: this.saveVersion,
             timestamp: Date.now(),
             gameTime: this.game.timeSystem?.currentDay || 0,
-            season: this.game.seasonSystem?.currentSeason || 'SPRING',
+            season: this.game.timeSystem?.currentSeason || 'SPRING',
             weather: this.game.weatherSystem?.currentWeather || 'sunny',
             
             // リソース
@@ -288,9 +288,12 @@ export class SaveLoadSystem {
         // 時間とシーズン
         if (this.game.timeSystem) {
             this.game.timeSystem.currentDay = saveData.gameTime || 0;
+            this.game.timeSystem.currentSeason = saveData.season || 'SPRING';
         }
-        if (this.game.seasonSystem) {
-            this.game.seasonSystem.currentSeason = saveData.season || 'SPRING';
+        
+        // 天候
+        if (this.game.weatherSystem && saveData.weather) {
+            this.game.weatherSystem.changeWeather(saveData.weather, true);
         }
         
         // リソース
