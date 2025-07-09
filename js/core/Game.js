@@ -12,6 +12,7 @@ import { EventSystem } from '../systems/EventSystem.js';
 import { ToolSystem } from '../systems/ToolSystem.js';
 import { CursorVisualizer } from '../ui/CursorVisualizer.js';
 import { FarmingSystem } from '../systems/FarmingSystem.js';
+import { ProductionSystem } from '../systems/ProductionSystem.js';
 
 export class Game {
     constructor(config) {
@@ -37,6 +38,7 @@ export class Game {
         this.buildingSystem = null;
         this.residentSystem = null;
         this.farmingSystem = null;
+        this.productionSystem = null;
         this.timeSystem = null;
         this.terrainGenerator = null;
         this.eventSystem = null;
@@ -119,6 +121,9 @@ export class Game {
             this.config.CROPS,
             this.config.SEASONS
         );
+        
+        // 生産システム
+        this.productionSystem = new ProductionSystem();
     }
 
     async generateWorld() {
@@ -255,6 +260,7 @@ export class Game {
         this.residentSystem.update(deltaTime);
         this.buildingSystem.update(deltaTime);
         this.farmingSystem.update(deltaTime);
+        this.productionSystem.update(deltaTime);
         this.resourceManager.update(deltaTime, this.residentSystem.getPopulation());
         this.eventSystem.update(deltaTime);
         

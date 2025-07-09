@@ -90,11 +90,24 @@ export class UIManager {
 
     // リソース表示の更新
     updateResourceDisplay(resources) {
-        this.elements.get('resource-food').textContent = Math.floor(resources.food.current);
-        this.elements.get('resource-wood').textContent = Math.floor(resources.wood.current);
-        this.elements.get('resource-stone').textContent = Math.floor(resources.stone.current);
-        this.elements.get('resource-iron').textContent = Math.floor(resources.iron.current);
-        this.elements.get('resource-money').textContent = Math.floor(resources.money.current);
+        // 基本リソース
+        const basicResources = ['food', 'wood', 'stone', 'iron', 'money'];
+        basicResources.forEach(resource => {
+            const element = this.elements.get(`resource-${resource}`);
+            if (element && resources[resource]) {
+                element.textContent = Math.floor(resources[resource].current);
+            }
+        });
+        
+        // 動的に追加されたリソースも表示
+        // 小麦とコーンは専用の表示場所があるかチェック
+        const cropResources = ['wheat', 'corn'];
+        cropResources.forEach(resource => {
+            const element = document.getElementById(`resource-${resource}`);
+            if (element && resources[resource]) {
+                element.textContent = Math.floor(resources[resource].current);
+            }
+        });
     }
 
     updatePopulation(current, max) {

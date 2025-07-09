@@ -29,9 +29,11 @@ export class ResourceManager {
     // リソースの追加
     add(amounts) {
         for (const [key, amount] of Object.entries(amounts)) {
-            if (this.resources[key]) {
-                this.resources[key].current += amount;
+            // 動的にリソースを追加
+            if (!this.resources[key]) {
+                this.resources[key] = { current: 0, max: 1000 };
             }
+            this.resources[key].current += amount;
         }
         this.notifyListeners('resourcesAdded', amounts);
     }
@@ -54,6 +56,15 @@ export class ResourceManager {
             }
         }
         return true;
+    }
+    
+    // リソースがあるかチェック
+    has(resource, amount) {
+        // 動的にリソースを追加
+        if (!this.resources[resource]) {
+            this.resources[resource] = { current: 0, max: 1000 };
+        }
+        return this.resources[resource].current >= amount;
     }
 
     // 特定のリソースを取得

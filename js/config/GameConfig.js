@@ -166,6 +166,51 @@ export const GameConfig = {
                 type: 'blacksmith',
                 animations: ['hammering', 'fire']
             }
+        },
+        BAKERY: {
+            id: 'bakery',
+            name: 'パン屋',
+            category: 'production',
+            cost: { wood: 30, stone: 40, money: 600 },
+            buildTime: 60,
+            size: { width: 3, height: 3 },
+            production: { bread: 1 },
+            consumption: { flour: 1, wood: 0.2 },
+            requiredWorkers: 2,
+            model: {
+                type: 'bakery',
+                animations: ['baking']
+            }
+        },
+        MILL: {
+            id: 'mill',
+            name: '風車小屋',
+            category: 'production',
+            cost: { wood: 40, stone: 20, money: 500 },
+            buildTime: 75,
+            size: { width: 3, height: 4 },
+            production: { flour: 1 },
+            consumption: { wheat: 2 },
+            requiredWorkers: 1,
+            model: {
+                type: 'mill',
+                animations: ['windmill']
+            }
+        },
+        MASON: {
+            id: 'mason',
+            name: '石工所',
+            category: 'production',
+            cost: { wood: 20, stone: 50, money: 400 },
+            buildTime: 60,
+            size: { width: 3, height: 3 },
+            production: { stone_blocks: 1 },
+            consumption: { stone: 2 },
+            requiredWorkers: 2,
+            model: {
+                type: 'mason',
+                animations: ['carving']
+            }
         }
     },
 
