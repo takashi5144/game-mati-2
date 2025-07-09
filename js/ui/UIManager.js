@@ -227,9 +227,16 @@ export class UIManager {
         title.textContent = building.config.name;
         
         let html = `
-            <p><strong>状態:</strong> ${building.isComplete ? '稼働中' : '建設中'}</p>
+            <p><strong>状態:</strong> ${building.isComplete ? (building.isDestroyed ? '破壊' : '稼働中') : '建設中'}</p>
             <p><strong>進捗:</strong> ${Math.floor(building.progress * 100)}%</p>
         `;
+        
+        // 健康状態を表示
+        if (building.health !== undefined && building.health < 1) {
+            const healthPercentage = Math.floor(building.health * 100);
+            const healthColor = healthPercentage > 50 ? '#51cf66' : (healthPercentage > 25 ? '#ffd93d' : '#ff6b6b');
+            html += `<p><strong>健康状態:</strong> <span style="color: ${healthColor}">${healthPercentage}%</span></p>`;
+        }
         
         if (building.config.production) {
             html += '<p><strong>生産:</strong></p><ul>';
@@ -333,28 +340,42 @@ export class UIManager {
     }
 
     // 通知システム
-    showNotification(message, type = 'info') {
+    showNotification(message, type = 'info', icon = '') {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
-        notification.textContent = message;
+        
+        // 背景色の設定
+        let backgroundColor;
+        switch (type) {
+            case 'error': backgroundColor = 'rgba(255, 50, 50, 0.9)'; break;
+            case 'danger': backgroundColor = 'rgba(200, 50, 50, 0.9)'; break;
+            case 'success': backgroundColor = 'rgba(50, 255, 50, 0.9)'; break;
+            case 'warning': backgroundColor = 'rgba(255, 200, 50, 0.9)'; break;
+            default: backgroundColor = 'rgba(50, 150, 255, 0.9)';
+        }
+        
+        notification.innerHTML = `${icon ? icon + ' ' : ''}${message}`;
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: ${type === 'error' ? 'rgba(255, 50, 50, 0.9)' : 'rgba(50, 255, 50, 0.9)'};
+            background: ${backgroundColor};
             color: white;
             padding: 1rem 2rem;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             animation: slideIn 0.3s ease-out;
+            font-size: 16px;
+            font-weight: bold;
         `;
         
         document.body.appendChild(notification);
         this.notifications.push(notification);
         
-        // 3秒後に削除
+        // 3秒後に削除（災害通知は長めに表示）
+        const duration = type === 'danger' ? 5000 : 3000;
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease-out';
             setTimeout(() => {
@@ -364,7 +385,7 @@ export class UIManager {
                     this.notifications.splice(index, 1);
                 }
             }, 300);
-        }, 3000);
+        }, duration);
     }
 
     showEventNotification(event) {

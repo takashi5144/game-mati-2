@@ -196,6 +196,8 @@ export class InputHandler {
                 event.preventDefault();
                 if (event.ctrlKey) {
                     this.game.saveLoadSystem.quickSave();
+                } else if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('DROUGHT');
                 }
                 break;
             case 'F9':
@@ -221,6 +223,32 @@ export class InputHandler {
                     this.game.saveLoadUI.close();
                 } else {
                     this.game.toolSystem.cancelTool();
+                }
+                break;
+            // デバッグ用：災害発生（Shift + F1-F6）
+            case 'F1':
+                if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('FIRE');
+                }
+                break;
+            case 'F2':
+                if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('PLAGUE');
+                }
+                break;
+            case 'F3':
+                if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('EARTHQUAKE');
+                }
+                break;
+            case 'F4':
+                if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('STORM');
+                }
+                break;
+            case 'F6':
+                if (event.shiftKey && event.altKey) {
+                    this.game.triggerDisaster('BANDIT_RAID');
                 }
                 break;
         }

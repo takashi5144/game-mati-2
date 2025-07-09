@@ -20,6 +20,7 @@ import { WeatherUI } from '../ui/WeatherUI.js';
 import { EconomySystem } from '../systems/EconomySystem.js';
 import { MarketUI } from '../ui/MarketUI.js';
 import { TutorialSystem } from '../systems/TutorialSystem.js';
+import { DisasterSystem } from '../systems/DisasterSystem.js';
 
 export class Game {
     constructor(config) {
@@ -56,6 +57,7 @@ export class Game {
         this.economySystem = null;
         this.marketUI = null;
         this.tutorialSystem = null;
+        this.disasterSystem = null;
         
         // ゲーム状態
         this.selectedObject = null;
@@ -166,6 +168,10 @@ export class Game {
         // チュートリアルシステム
         this.tutorialSystem = new TutorialSystem(this);
         this.tutorialSystem.init();
+        
+        // 災害システム
+        this.disasterSystem = new DisasterSystem(this);
+        this.disasterSystem.init();
     }
 
     async generateWorld() {
@@ -309,6 +315,7 @@ export class Game {
         this.economySystem.update(deltaTime);
         this.resourceManager.update(deltaTime, this.residentSystem.getPopulation());
         this.eventSystem.update(deltaTime);
+        this.disasterSystem.update(deltaTime);
         
         // UIの更新
         this.ui.update(deltaTime);
@@ -413,6 +420,13 @@ export class Game {
     // シーンアクセサ
     get scene() {
         return this.sceneManager?.scene;
+    }
+    
+    // デバッグ用：手動で災害を発生させる
+    triggerDisaster(type) {
+        if (this.disasterSystem) {
+            this.disasterSystem.triggerManualDisaster(type);
+        }
     }
 
 }
