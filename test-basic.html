@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基本テスト</title>
+    <style>
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; background: #333; }
+        .success { background: #0a0; }
+        .error { background: #a00; }
+    </style>
+</head>
+<body>
+    <h1>基本動作テスト</h1>
+    
+    <div id="test1" class="test">1. JavaScript基本: <span id="result1">テスト中...</span></div>
+    <div id="test2" class="test">2. DOM操作: <span id="result2">テスト中...</span></div>
+    <div id="test3" class="test">3. Three.js CDN: <span id="result3">テスト中...</span></div>
+    <div id="test4" class="test">4. ES6モジュール: <span id="result4">テスト中...</span></div>
+    <div id="test5" class="test">5. ローカルファイル: <span id="result5">テスト中...</span></div>
+    
+    <h2>詳細ログ:</h2>
+    <pre id="log" style="background: #111; padding: 10px; overflow: auto; height: 300px;"></pre>
+    
+    <!-- 基本的なJavaScriptテスト -->
+    <script>
+        // ログ関数
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('log').textContent += msg + '\n';
+        }
+        
+        // テスト1: JavaScript基本
+        try {
+            log('テスト1: JavaScript実行確認');
+            document.getElementById('result1').textContent = '成功';
+            document.getElementById('test1').className = 'test success';
+        } catch (e) {
+            document.getElementById('result1').textContent = 'エラー: ' + e.message;
+            document.getElementById('test1').className = 'test error';
+        }
+        
+        // テスト2: DOM操作
+        try {
+            log('テスト2: DOM操作確認');
+            const elem = document.createElement('div');
+            elem.textContent = 'テスト';
+            document.getElementById('result2').textContent = '成功';
+            document.getElementById('test2').className = 'test success';
+        } catch (e) {
+            document.getElementById('result2').textContent = 'エラー: ' + e.message;
+            document.getElementById('test2').className = 'test error';
+        }
+    </script>
+    
+    <!-- Three.js CDNテスト -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // テスト3: Three.js CDN
+        setTimeout(() => {
+            try {
+                log('テスト3: Three.js確認');
+                if (typeof THREE !== 'undefined') {
+                    log('Three.js バージョン: ' + THREE.REVISION);
+                    document.getElementById('result3').textContent = '成功 (r' + THREE.REVISION + ')';
+                    document.getElementById('test3').className = 'test success';
+                } else {
+                    throw new Error('THREEが定義されていません');
+                }
+            } catch (e) {
+                log('Three.jsエラー: ' + e.message);
+                document.getElementById('result3').textContent = 'エラー: ' + e.message;
+                document.getElementById('test3').className = 'test error';
+            }
+        }, 1000);
+    </script>
+    
+    <!-- ES6モジュールテスト -->
+    <script type="module">
+        // テスト4: ES6モジュール
+        try {
+            const log = (msg) => {
+                console.log(msg);
+                document.getElementById('log').textContent += msg + '\n';
+            };
+            
+            log('テスト4: ES6モジュール確認');
+            
+            // アロー関数とテンプレートリテラル
+            const test = () => `ES6機能OK`;
+            log(test());
+            
+            document.getElementById('result4').textContent = '成功';
+            document.getElementById('test4').className = 'test success';
+        } catch (e) {
+            document.getElementById('result4').textContent = 'エラー: ' + e.message;
+            document.getElementById('test4').className = 'test error';
+        }
+    </script>
+    
+    <!-- ローカルファイルテスト -->
+    <script type="module">
+        // テスト5: ローカルファイル読み込み
+        setTimeout(async () => {
+            try {
+                const log = (msg) => {
+                    console.log(msg);
+                    document.getElementById('log').textContent += msg + '\n';
+                };
+                
+                log('テスト5: ローカルファイル読み込み確認');
+                
+                // styles/main.css の存在確認
+                const response = await fetch('styles/main.css');
+                log('styles/main.css status: ' + response.status);
+                
+                if (response.ok) {
+                    document.getElementById('result5').textContent = '成功';
+                    document.getElementById('test5').className = 'test success';
+                } else {
+                    throw new Error('ファイル読み込みエラー: ' + response.status);
+                }
+            } catch (e) {
+                document.getElementById('result5').textContent = 'エラー: ' + e.message;
+                document.getElementById('test5').className = 'test error';
+            }
+        }, 2000);
+    </script>
+    
+    <h2>ブラウザ情報:</h2>
+    <pre id="browser-info" style="background: #111; padding: 10px;"></pre>
+    
+    <script>
+        // ブラウザ情報
+        const info = {
+            'User Agent': navigator.userAgent,
+            'Language': navigator.language,
+            'Platform': navigator.platform,
+            'Cookies Enabled': navigator.cookieEnabled,
+            'Online': navigator.onLine,
+            'Screen': screen.width + 'x' + screen.height,
+            'Window': window.innerWidth + 'x' + window.innerHeight,
+            'URL': location.href,
+            'Protocol': location.protocol,
+            'Host': location.host,
+            'Path': location.pathname
+        };
+        
+        let infoText = '';
+        for (const [key, value] of Object.entries(info)) {
+            infoText += key + ': ' + value + '\n';
+        }
+        document.getElementById('browser-info').textContent = infoText;
+    </script>
+</body>
+</html>

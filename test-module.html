@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モジュール読み込みテスト</title>
+    <style>
+        body { 
+            background: #222; 
+            color: #fff; 
+            font-family: monospace; 
+            padding: 20px; 
+            margin: 0;
+        }
+        .test { 
+            margin: 15px 0; 
+            padding: 15px; 
+            background: #333; 
+            border-radius: 5px;
+        }
+        .success { background: #0a4a0a; border: 1px solid #0f0; }
+        .error { background: #4a0a0a; border: 1px solid #f00; }
+        .pending { background: #4a4a0a; border: 1px solid #ff0; }
+        pre { 
+            background: #111; 
+            padding: 10px; 
+            overflow: auto; 
+            border-radius: 3px;
+        }
+        h1 { color: #0ff; }
+        .log-entry { margin: 2px 0; }
+        .log-time { color: #888; }
+        .log-error { color: #f88; }
+        .log-success { color: #8f8; }
+        .log-info { color: #88f; }
+    </style>
+</head>
+<body>
+    <h1>モジュール読み込みテスト</h1>
+    
+    <div id="test1" class="test pending">
+        <h3>テスト1: スクリプト実行確認</h3>
+        <div class="result">待機中...</div>
+    </div>
+    
+    <div id="test2" class="test pending">
+        <h3>テスト2: Three.js CDN読み込み</h3>
+        <div class="result">待機中...</div>
+    </div>
+    
+    <div id="test3" class="test pending">
+        <h3>テスト3: three-global.js モジュール</h3>
+        <div class="result">待機中...</div>
+    </div>
+    
+    <div id="test4" class="test pending">
+        <h3>テスト4: GameConfig モジュール</h3>
+        <div class="result">待機中...</div>
+    </div>
+    
+    <div id="test5" class="test pending">
+        <h3>テスト5: Game クラスインポート</h3>
+        <div class="result">待機中...</div>
+    </div>
+    
+    <div id="test6" class="test pending">
+        <h3>テスト6: Three.js シーン作成</h3>
+        <div class="result">待機中...</div>
+        <div id="canvas-container" style="width: 400px; height: 300px; margin: 10px 0; border: 1px solid #666;"></div>
+    </div>
+    
+    <h2>詳細ログ:</h2>
+    <pre id="log"></pre>
+    
+    <h2>ブラウザ情報:</h2>
+    <pre id="browser-info"></pre>
+    
+    <!-- 基本的なスクリプト実行テスト -->
+    <script>
+        // ログ関数
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const logClass = `log-${type}`;
+            const logEntry = `<div class="log-entry"><span class="log-time">${time}</span> <span class="${logClass}">${message}</span></div>`;
+            
+            const logElement = document.getElementById('log');
+            logElement.innerHTML += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(`[${type}] ${message}`);
+        }
+        
+        function updateTest(testId, success, message) {
+            const testElement = document.getElementById(testId);
+            testElement.className = `test ${success ? 'success' : 'error'}`;
+            testElement.querySelector('.result').textContent = message;
+        }
+        
+        // テスト1: スクリプト実行
+        try {
+            addLog('スクリプト実行開始', 'info');
+            updateTest('test1', true, '成功: JavaScriptが正常に実行されています');
+            addLog('テスト1完了', 'success');
+        } catch (e) {
+            updateTest('test1', false, `エラー: ${e.message}`);
+            addLog(`テスト1エラー: ${e.message}`, 'error');
+        }
+        
+        // ブラウザ情報
+        const browserInfo = {
+            'User Agent': navigator.userAgent,
+            'Language': navigator.language,
+            'Platform': navigator.platform,
+            'Online': navigator.onLine,
+            'URL': location.href,
+            'Protocol': location.protocol,
+            'Host': location.host,
+            'Pathname': location.pathname,
+            'ES6 Modules': 'noModule' in HTMLScriptElement.prototype ? 'Supported' : 'Not Supported'
+        };
+        
+        let infoText = '';
+        for (const [key, value] of Object.entries(browserInfo)) {
+            infoText += `${key}: ${value}\n`;
+        }
+        document.getElementById('browser-info').textContent = infoText;
+        
+        // グローバルエラーハンドラ
+        window.addEventListener('error', (e) => {
+            addLog(`グローバルエラー: ${e.message} (${e.filename}:${e.lineno}:${e.colno})`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            addLog(`未処理のPromise拒否: ${e.reason}`, 'error');
+        });
+    </script>
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Three.js読み込みテスト -->
+    <script>
+        // テスト2: Three.js CDN
+        setTimeout(() => {
+            try {
+                if (typeof THREE !== 'undefined') {
+                    updateTest('test2', true, `成功: Three.js r${THREE.REVISION} が読み込まれました`);
+                    addLog(`Three.js r${THREE.REVISION} 読み込み成功`, 'success');
+                    window.THREE = THREE; // グローバルに設定
+                } else {
+                    throw new Error('THREEオブジェクトが見つかりません');
+                }
+            } catch (e) {
+                updateTest('test2', false, `エラー: ${e.message}`);
+                addLog(`テスト2エラー: ${e.message}`, 'error');
+            }
+        }, 1000);
+    </script>
+    
+    <!-- ES6モジュールテスト -->
+    <script type="module">
+        import { addLog, updateTest } from './js/test-utils.js';
+        
+        // テスト3: three-global.js
+        async function test3() {
+            try {
+                addLog('three-global.js インポート開始', 'info');
+                const module = await import('./js/three-global.js');
+                addLog(`three-global.js インポート成功: ${Object.keys(module).join(', ')}`, 'success');
+                
+                if (module.THREE && typeof module.THREE === 'object') {
+                    updateTest('test3', true, '成功: three-global.js が正常にインポートされました');
+                } else {
+                    throw new Error('THREEオブジェクトが正しくエクスポートされていません');
+                }
+            } catch (e) {
+                updateTest('test3', false, `エラー: ${e.message}`);
+                addLog(`テスト3エラー: ${e.stack}`, 'error');
+            }
+        }
+        
+        // テスト4: GameConfig
+        async function test4() {
+            try {
+                addLog('GameConfig.js インポート開始', 'info');
+                const module = await import('./js/config/GameConfig.js');
+                addLog(`GameConfig.js インポート成功: ${Object.keys(module).join(', ')}`, 'success');
+                
+                if (module.GameConfig && module.GameConfig.GAME) {
+                    updateTest('test4', true, `成功: GameConfig (${module.GameConfig.GAME.NAME}) が読み込まれました`);
+                    addLog(`GameConfig.GAME.NAME: ${module.GameConfig.GAME.NAME}`, 'info');
+                } else {
+                    throw new Error('GameConfigオブジェクトが正しくエクスポートされていません');
+                }
+            } catch (e) {
+                updateTest('test4', false, `エラー: ${e.message}`);
+                addLog(`テスト4エラー: ${e.stack}`, 'error');
+            }
+        }
+        
+        // テスト5: Game クラス
+        async function test5() {
+            try {
+                addLog('Game.js インポート開始', 'info');
+                const module = await import('./js/core/Game.js');
+                addLog(`Game.js インポート成功: ${Object.keys(module).join(', ')}`, 'success');
+                
+                if (module.Game && typeof module.Game === 'function') {
+                    updateTest('test5', true, '成功: Game クラスが正常にインポートされました');
+                } else {
+                    throw new Error('Gameクラスが正しくエクスポートされていません');
+                }
+            } catch (e) {
+                updateTest('test5', false, `エラー: ${e.message}`);
+                addLog(`テスト5エラー: ${e.stack}`, 'error');
+            }
+        }
+        
+        // テスト6: Three.js シーン作成
+        async function test6() {
+            try {
+                addLog('Three.js シーン作成開始', 'info');
+                
+                // three-global.jsからTHREEをインポート
+                const { THREE } = await import('./js/three-global.js');
+                
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, 400/300, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer();
+                renderer.setSize(400, 300);
+                
+                const container = document.getElementById('canvas-container');
+                container.appendChild(renderer.domElement);
+                
+                // キューブを追加
+                const geometry = new THREE.BoxGeometry();
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                
+                camera.position.z = 5;
+                
+                // アニメーション
+                function animate() {
+                    requestAnimationFrame(animate);
+                    cube.rotation.x += 0.01;
+                    cube.rotation.y += 0.01;
+                    renderer.render(scene, camera);
+                }
+                animate();
+                
+                updateTest('test6', true, '成功: Three.js シーンが正常に作成されました');
+                addLog('Three.js シーン作成成功', 'success');
+            } catch (e) {
+                updateTest('test6', false, `エラー: ${e.message}`);
+                addLog(`テスト6エラー: ${e.stack}`, 'error');
+            }
+        }
+        
+        // テストを順番に実行
+        async function runTests() {
+            addLog('=== モジュールテスト開始 ===', 'info');
+            
+            // Three.jsの読み込みを待つ
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            await test3();
+            await test4();
+            await test5();
+            await test6();
+            
+            addLog('=== モジュールテスト完了 ===', 'info');
+        }
+        
+        // DOMContentLoadedを待ってから実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runTests);
+        } else {
+            runTests();
+        }
+    </script>
+</body>
+</html>

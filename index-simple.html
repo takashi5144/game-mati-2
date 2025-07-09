@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピクセルファーム・フロンティア 3D v2</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <h1>ピクセルファーム・フロンティア 3D</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- メインゲームコンテナ -->
+    <div id="game-container" class="game-container"></div>
+
+    <!-- UI要素（簡略化） -->
+    <div id="ui-top" class="ui-top" style="display:none;">
+        <div class="resource-panel">
+            <span>リソース表示</span>
+        </div>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- ゲーム初期化 -->
+    <script type="module">
+        // エラーハンドリング
+        window.addEventListener('error', (e) => {
+            console.error('Error:', e.message, e.filename, e.lineno);
+            document.querySelector('.loading-text').textContent = `エラー: ${e.message}`;
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promise rejection:', e.reason);
+            document.querySelector('.loading-text').textContent = `エラー: ${e.reason?.message || e.reason}`;
+        });
+
+        // Three.js確認
+        console.log('Three.js check:', typeof THREE !== 'undefined' ? 'OK' : 'NG');
+        
+        if (typeof THREE === 'undefined') {
+            document.querySelector('.loading-text').textContent = 'エラー: Three.js が読み込まれていません';
+        } else {
+            console.log('Three.js version:', THREE.REVISION);
+            
+            // モジュールを動的にインポート
+            try {
+                console.log('Importing GameConfig...');
+                const { GameConfig } = await import('./js/config/GameConfig.js');
+                console.log('GameConfig loaded:', GameConfig);
+                
+                console.log('Importing Game...');
+                const { Game } = await import('./js/core/Game.js');
+                console.log('Game class loaded:', Game);
+                
+                // ゲーム作成
+                console.log('Creating game instance...');
+                window.game = new Game(GameConfig);
+                console.log('Game instance created');
+                
+                // 初期化
+                console.log('Initializing game...');
+                await window.game.init();
+                console.log('Game initialized');
+                
+                // 開始
+                console.log('Starting game...');
+                window.game.start();
+                console.log('Game started');
+                
+                // ローディング画面を隠す
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+                
+            } catch (error) {
+                console.error('Game initialization error:', error);
+                document.querySelector('.loading-text').textContent = `エラー: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

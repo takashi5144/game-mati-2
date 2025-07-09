@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>段階的診断テスト</title>
+    <style>
+        body { 
+            background: #1a1a1a; 
+            color: #fff; 
+            font-family: 'Courier New', monospace; 
+            padding: 20px; 
+            margin: 0;
+            line-height: 1.6;
+        }
+        .step { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #2a2a2a; 
+            border-left: 4px solid #666;
+            border-radius: 4px;
+        }
+        .step.success { border-left-color: #4caf50; }
+        .step.error { border-left-color: #f44336; }
+        .step.running { border-left-color: #ff9800; }
+        .step h3 { margin-top: 0; color: #64b5f6; }
+        .code { 
+            background: #0a0a0a; 
+            padding: 10px; 
+            border-radius: 4px;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .result { 
+            margin-top: 10px; 
+            padding: 10px; 
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        .error-detail { color: #ff6b6b; }
+        .success-detail { color: #69f0ae; }
+        button { 
+            background: #2196f3; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        button:disabled { background: #666; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <h1>🔍 段階的診断テスト</h1>
+    <p>各ステップを順番に実行して、どこで問題が発生しているか特定します。</p>
+    
+    <div class="controls">
+        <button onclick="runAllTests()">すべてのテストを実行</button>
+        <button onclick="location.reload()">リセット</button>
+    </div>
+    
+    <!-- ステップ1: 基本的なJavaScript -->
+    <div id="step1" class="step">
+        <h3>ステップ1: 基本的なJavaScript実行</h3>
+        <div class="code">
+console.log('Hello from JavaScript');
+document.getElementById('step1-result').textContent = '実行成功';
+        </div>
+        <button onclick="runStep1()">実行</button>
+        <div id="step1-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ2: Three.js CDN -->
+    <div id="step2" class="step">
+        <h3>ステップ2: Three.js CDN読み込み確認</h3>
+        <div class="code">
+if (typeof THREE !== 'undefined') {
+    console.log('Three.js version:', THREE.REVISION);
+} else {
+    throw new Error('Three.js not loaded');
+}
+        </div>
+        <button onclick="runStep2()">実行</button>
+        <div id="step2-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ3: ES6モジュールの基本 -->
+    <div id="step3" class="step">
+        <h3>ステップ3: ES6モジュールの基本テスト</h3>
+        <div class="code">
+// インラインモジュールスクリプトを実行
+&lt;script type="module"&gt;
+    console.log('ES6 module executed');
+&lt;/script&gt;
+        </div>
+        <button onclick="runStep3()">実行</button>
+        <div id="step3-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ4: 相対パスのモジュールインポート -->
+    <div id="step4" class="step">
+        <h3>ステップ4: 相対パスのモジュールインポート</h3>
+        <div class="code">
+import { testFunction } from './js/test-module.js';
+testFunction();
+        </div>
+        <button onclick="runStep4()">実行</button>
+        <div id="step4-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ5: three-global.js -->
+    <div id="step5" class="step">
+        <h3>ステップ5: three-global.js インポート</h3>
+        <div class="code">
+import { THREE } from './js/three-global.js';
+console.log('THREE object:', THREE);
+        </div>
+        <button onclick="runStep5()">実行</button>
+        <div id="step5-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ6: GameConfig.js -->
+    <div id="step6" class="step">
+        <h3>ステップ6: GameConfig.js インポート</h3>
+        <div class="code">
+import { GameConfig } from './js/config/GameConfig.js';
+console.log('GameConfig:', GameConfig);
+        </div>
+        <button onclick="runStep6()">実行</button>
+        <div id="step6-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ7: Game.js -->
+    <div id="step7" class="step">
+        <h3>ステップ7: Game.js インポート</h3>
+        <div class="code">
+import { Game } from './js/core/Game.js';
+console.log('Game class:', Game);
+        </div>
+        <button onclick="runStep7()">実行</button>
+        <div id="step7-result" class="result"></div>
+    </div>
+    
+    <!-- ステップ8: ゲームインスタンス作成 -->
+    <div id="step8" class="step">
+        <h3>ステップ8: ゲームインスタンス作成</h3>
+        <div class="code">
+const game = new Game(GameConfig);
+console.log('Game instance:', game);
+        </div>
+        <button onclick="runStep8()">実行</button>
+        <div id="step8-result" class="result"></div>
+    </div>
+    
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // 結果表示ヘルパー
+        function showResult(stepId, success, message, detail = '') {
+            const step = document.getElementById(stepId);
+            const result = document.getElementById(stepId + '-result');
+            
+            step.className = `step ${success ? 'success' : 'error'}`;
+            result.innerHTML = `
+                <div class="${success ? 'success-detail' : 'error-detail'}">
+                    ${success ? '✅' : '❌'} ${message}
+                    ${detail ? '<br><small>' + detail + '</small>' : ''}
+                </div>
+            `;
+        }
+        
+        // ステップ1: 基本JavaScript
+        function runStep1() {
+            try {
+                console.log('Hello from JavaScript');
+                showResult('step1', true, '基本的なJavaScriptが正常に実行されています');
+            } catch (e) {
+                showResult('step1', false, 'JavaScriptエラー', e.message);
+            }
+        }
+        
+        // ステップ2: Three.js確認
+        function runStep2() {
+            try {
+                if (typeof THREE !== 'undefined') {
+                    showResult('step2', true, `Three.js r${THREE.REVISION} が読み込まれています`);
+                } else {
+                    throw new Error('Three.js が見つかりません');
+                }
+            } catch (e) {
+                showResult('step2', false, 'Three.js読み込みエラー', e.message);
+            }
+        }
+        
+        // ステップ3: ES6モジュール基本
+        function runStep3() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                try {
+                    console.log('ES6 module executed');
+                    window.es6ModuleSuccess = true;
+                } catch (e) {
+                    window.es6ModuleError = e;
+                }
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.es6ModuleSuccess) {
+                    showResult('step3', true, 'ES6モジュールがサポートされています');
+                } else if (window.es6ModuleError) {
+                    showResult('step3', false, 'ES6モジュールエラー', window.es6ModuleError.message);
+                } else {
+                    showResult('step3', false, 'ES6モジュールが実行されませんでした');
+                }
+            }, 100);
+        }
+        
+        // ステップ4: 相対パスインポート
+        function runStep4() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                try {
+                    // まずテストモジュールを作成
+                    const testModule = \`
+export function testFunction() {
+    return 'Module imported successfully';
+}
+                    \`;
+                    
+                    // Blobとして作成してインポート
+                    const blob = new Blob([testModule], { type: 'application/javascript' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    import(url).then(module => {
+                        const result = module.testFunction();
+                        window.step4Success = result;
+                    }).catch(e => {
+                        window.step4Error = e;
+                    });
+                } catch (e) {
+                    window.step4Error = e;
+                }
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.step4Success) {
+                    showResult('step4', true, 'モジュールインポートが機能しています', window.step4Success);
+                } else if (window.step4Error) {
+                    showResult('step4', false, 'モジュールインポートエラー', window.step4Error.message);
+                } else {
+                    showResult('step4', false, 'モジュールインポートがタイムアウトしました');
+                }
+            }, 500);
+        }
+        
+        // ステップ5: three-global.js
+        function runStep5() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                import('./js/three-global.js').then(module => {
+                    if (module.THREE) {
+                        window.step5Success = true;
+                        console.log('THREE from module:', module.THREE);
+                    } else {
+                        window.step5Error = new Error('THREE not exported from module');
+                    }
+                }).catch(e => {
+                    window.step5Error = e;
+                    console.error('Import error:', e);
+                });
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.step5Success) {
+                    showResult('step5', true, 'three-global.js が正常にインポートされました');
+                } else if (window.step5Error) {
+                    showResult('step5', false, 'three-global.js インポートエラー', window.step5Error.message);
+                } else {
+                    showResult('step5', false, 'three-global.js インポートがタイムアウトしました');
+                }
+            }, 1000);
+        }
+        
+        // ステップ6: GameConfig.js
+        function runStep6() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                import('./js/config/GameConfig.js').then(module => {
+                    if (module.GameConfig) {
+                        window.step6Success = module.GameConfig.GAME.NAME;
+                        console.log('GameConfig:', module.GameConfig);
+                    } else {
+                        window.step6Error = new Error('GameConfig not exported from module');
+                    }
+                }).catch(e => {
+                    window.step6Error = e;
+                    console.error('Import error:', e);
+                });
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.step6Success) {
+                    showResult('step6', true, 'GameConfig が正常にインポートされました', `ゲーム名: ${window.step6Success}`);
+                } else if (window.step6Error) {
+                    showResult('step6', false, 'GameConfig インポートエラー', window.step6Error.message);
+                } else {
+                    showResult('step6', false, 'GameConfig インポートがタイムアウトしました');
+                }
+            }, 1000);
+        }
+        
+        // ステップ7: Game.js
+        function runStep7() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                import('./js/core/Game.js').then(module => {
+                    if (module.Game && typeof module.Game === 'function') {
+                        window.step7Success = true;
+                        console.log('Game class:', module.Game);
+                    } else {
+                        window.step7Error = new Error('Game class not properly exported');
+                    }
+                }).catch(e => {
+                    window.step7Error = e;
+                    console.error('Import error:', e);
+                });
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.step7Success) {
+                    showResult('step7', true, 'Game クラスが正常にインポートされました');
+                } else if (window.step7Error) {
+                    showResult('step7', false, 'Game クラスインポートエラー', window.step7Error.message);
+                } else {
+                    showResult('step7', false, 'Game クラスインポートがタイムアウトしました');
+                }
+            }, 2000);
+        }
+        
+        // ステップ8: ゲームインスタンス
+        function runStep8() {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                Promise.all([
+                    import('./js/config/GameConfig.js'),
+                    import('./js/core/Game.js')
+                ]).then(([configModule, gameModule]) => {
+                    const game = new gameModule.Game(configModule.GameConfig);
+                    window.step8Success = game;
+                    console.log('Game instance created:', game);
+                }).catch(e => {
+                    window.step8Error = e;
+                    console.error('Game creation error:', e);
+                });
+            `;
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.step8Success) {
+                    showResult('step8', true, 'ゲームインスタンスが正常に作成されました');
+                } else if (window.step8Error) {
+                    showResult('step8', false, 'ゲームインスタンス作成エラー', window.step8Error.message);
+                } else {
+                    showResult('step8', false, 'ゲームインスタンス作成がタイムアウトしました');
+                }
+            }, 3000);
+        }
+        
+        // すべてのテストを実行
+        async function runAllTests() {
+            runStep1();
+            await new Promise(r => setTimeout(r, 500));
+            
+            runStep2();
+            await new Promise(r => setTimeout(r, 500));
+            
+            runStep3();
+            await new Promise(r => setTimeout(r, 500));
+            
+            runStep4();
+            await new Promise(r => setTimeout(r, 1000));
+            
+            runStep5();
+            await new Promise(r => setTimeout(r, 1500));
+            
+            runStep6();
+            await new Promise(r => setTimeout(r, 1500));
+            
+            runStep7();
+            await new Promise(r => setTimeout(r, 2500));
+            
+            runStep8();
+        }
+        
+        // エラーハンドリング
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled rejection:', e.reason);
+        });
+    </script>
+</body>
+</html>
