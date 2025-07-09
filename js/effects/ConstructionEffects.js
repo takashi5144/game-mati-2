@@ -1,4 +1,6 @@
 // 建設エフェクトシステム
+import { THREE } from '../three-global.js';
+
 export class ConstructionEffects {
     constructor(scene) {
         this.scene = scene;

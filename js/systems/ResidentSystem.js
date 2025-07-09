@@ -1,4 +1,6 @@
 // 住民システム
+import { THREE } from '../three-global.js';
+
 import { StateMachine, ResidentStates } from '../ai/StateMachine.js';
 
 export class ResidentSystem {

@@ -1,4 +1,6 @@
 // カーソル視覚フィードバッククラス
+import { THREE } from '../three-global.js';
+
 export class CursorVisualizer {
     constructor(scene) {
         this.scene = scene;

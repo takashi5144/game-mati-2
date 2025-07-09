@@ -1,4 +1,6 @@
 // 地形生成クラス
+import { THREE } from '../three-global.js';
+
 export class TerrainGenerator {
     constructor(config, scene) {
         this.config = config;

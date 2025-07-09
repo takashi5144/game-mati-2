@@ -1,4 +1,6 @@
 // 入力処理クラス
+import { THREE } from '../three-global.js';
+
 export class InputHandler {
     constructor(game) {
         this.game = game;

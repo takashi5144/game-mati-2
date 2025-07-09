@@ -1,4 +1,6 @@
 // 天候システム
+import { THREE } from '../three-global.js';
+
 export class WeatherSystem {
     constructor(scene, config) {
         this.scene = scene;

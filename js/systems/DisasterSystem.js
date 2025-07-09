@@ -1,4 +1,6 @@
 // 災害イベントシステム
+import { THREE } from '../three-global.js';
+
 export class DisasterSystem {
     constructor(game) {
         this.game = game;

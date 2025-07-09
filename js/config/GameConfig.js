@@ -1,4 +1,6 @@
 // ゲーム設定ファイル
+import { THREE } from '../three-global.js';
+
 export const GameConfig = {
     // ゲームの基本設定
     GAME: {

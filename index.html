@@ -291,6 +291,17 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
+    <!-- Three.jsの読み込み確認 -->
+    <script>
+        // Three.jsが読み込まれているか確認
+        if (typeof THREE === 'undefined') {
+            console.error('Three.js の読み込みに失敗しました');
+            document.getElementById('loading-text').textContent = 'エラー: Three.js の読み込みに失敗しました';
+        } else {
+            console.log('Three.js', THREE.REVISION, 'を読み込みました');
+        }
+    </script>
+    
     <!-- ゲームモジュール -->
     <script type="module" src="js/main.js"></script>
 </body>

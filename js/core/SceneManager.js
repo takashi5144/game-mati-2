@@ -1,4 +1,6 @@
 // シーン管理クラス
+import { THREE } from '../three-global.js';
+
 export class SceneManager {
     constructor() {
         this.scene = null;

@@ -1,4 +1,6 @@
 // 農業システム
+import { THREE } from '../three-global.js';
+
 export class FarmingSystem {
     constructor(scene, cropsConfig, seasonsConfig) {
         this.scene = scene;

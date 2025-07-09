@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲームデバッグ</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .status { margin: 10px 0; padding: 10px; background: #333; border-radius: 4px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d3a5a; }
+        pre { background: #000; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>ピクセルファーム・フロンティア 3D - デバッグ</h1>
+    
+    <div id="status-container"></div>
+    
+    <h2>エラーログ:</h2>
+    <pre id="error-log"></pre>
+    
+    <h2>システム情報:</h2>
+    <pre id="system-info"></pre>
+    
+    <script>
+        const statusContainer = document.getElementById('status-container');
+        const errorLog = document.getElementById('error-log');
+        const systemInfo = document.getElementById('system-info');
+        
+        let errors = [];
+        
+        function addStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusContainer.appendChild(div);
+            console.log(`[${type}] ${message}`);
+        }
+        
+        function logError(error) {
+            errors.push(error);
+            errorLog.textContent = errors.join('\n\n');
+        }
+        
+        // エラーハンドリング
+        window.addEventListener('error', (e) => {
+            const errorInfo = `Error: ${e.message}\nFile: ${e.filename}\nLine: ${e.lineno}:${e.colno}\nStack: ${e.error?.stack || 'N/A'}`;
+            logError(errorInfo);
+            addStatus(`JavaScript Error: ${e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            const errorInfo = `Unhandled Promise Rejection: ${e.reason}`;
+            logError(errorInfo);
+            addStatus(`Promise Rejection: ${e.reason}`, 'error');
+        });
+        
+        // システム情報
+        const info = {
+            'User Agent': navigator.userAgent,
+            'Platform': navigator.platform,
+            'Language': navigator.language,
+            'Screen': `${screen.width}x${screen.height}`,
+            'Window': `${window.innerWidth}x${window.innerHeight}`,
+            'WebGL Support': !!window.WebGLRenderingContext ? 'Yes' : 'No',
+            'WebGL2 Support': !!window.WebGL2RenderingContext ? 'Yes' : 'No',
+            'Location': window.location.href,
+            'Protocol': window.location.protocol,
+            'Host': window.location.host,
+            'Pathname': window.location.pathname
+        };
+        
+        let infoText = '';
+        for (const [key, value] of Object.entries(info)) {
+            infoText += `${key}: ${value}\n`;
+        }
+        systemInfo.textContent = infoText;
+        
+        // Three.js チェック
+        addStatus('Three.js チェック開始...', 'info');
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = () => {
+            if (typeof THREE !== 'undefined') {
+                addStatus(`Three.js r${THREE.REVISION} 読み込み成功`, 'success');
+                
+                // WebGLレンダラーのテスト
+                try {
+                    const renderer = new THREE.WebGLRenderer();
+                    addStatus('WebGLRenderer 作成成功', 'success');
+                    renderer.dispose();
+                } catch (e) {
+                    addStatus(`WebGLRenderer エラー: ${e.message}`, 'error');
+                }
+            } else {
+                addStatus('Three.js グローバル変数が見つかりません', 'error');
+            }
+        };
+        script.onerror = () => {
+            addStatus('Three.js の読み込みに失敗しました', 'error');
+        };
+        document.head.appendChild(script);
+        
+        // ES6モジュールのテスト
+        addStatus('ES6モジュール テスト開始...', 'info');
+        
+        const moduleTest = document.createElement('script');
+        moduleTest.type = 'module';
+        moduleTest.textContent = `
+            import { GameConfig } from './js/config/GameConfig.js';
+            window._moduleTestSuccess = true;
+            console.log('ES6モジュール読み込み成功:', GameConfig);
+        `;
+        document.head.appendChild(moduleTest);
+        
+        // モジュールテストの結果を確認
+        setTimeout(() => {
+            if (window._moduleTestSuccess) {
+                addStatus('ES6モジュール 読み込み成功', 'success');
+            } else {
+                addStatus('ES6モジュール 読み込み失敗', 'error');
+            }
+        }, 1000);
+        
+        // メインゲームの読み込みテスト
+        setTimeout(() => {
+            addStatus('メインゲーム読み込みテスト...', 'info');
+            
+            const gameScript = document.createElement('script');
+            gameScript.type = 'module';
+            gameScript.src = './js/main.js';
+            gameScript.onload = () => {
+                addStatus('main.js 読み込み成功', 'success');
+            };
+            gameScript.onerror = () => {
+                addStatus('main.js 読み込み失敗', 'error');
+            };
+            document.head.appendChild(gameScript);
+        }, 2000);
+    </script>
+</body>
+</html>

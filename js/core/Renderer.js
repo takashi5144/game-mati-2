@@ -1,4 +1,6 @@
 // レンダラー管理クラス
+import { THREE } from '../three-global.js';
+
 export class Renderer {
     constructor(config) {
         this.config = config;

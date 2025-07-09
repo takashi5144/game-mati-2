@@ -1,4 +1,6 @@
 // 建物システム
+import { THREE } from '../three-global.js';
+
 import { ConstructionEffects } from '../effects/ConstructionEffects.js';
 
 export class BuildingSystem {

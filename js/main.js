@@ -105,8 +105,29 @@ window.addEventListener('beforeunload', (e) => {
 // エラーハンドリング
 window.addEventListener('error', (e) => {
     console.error('グローバルエラー:', e.error);
+    console.error('エラーの詳細:', {
+        message: e.message,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno,
+        error: e.error
+    });
+    
+    // ローディング画面にエラーを表示
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+        loadingText.textContent = `エラー: ${e.message || 'ゲームの初期化に失敗しました'}`;
+        loadingText.style.color = '#ff6b6b';
+    }
 });
 
 window.addEventListener('unhandledrejection', (e) => {
     console.error('未処理のPromise拒否:', e.reason);
+    
+    // ローディング画面にエラーを表示
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+        loadingText.textContent = `エラー: ${e.reason?.message || e.reason || 'ゲームの初期化に失敗しました'}`;
+        loadingText.style.color = '#ff6b6b';
+    }
 });
