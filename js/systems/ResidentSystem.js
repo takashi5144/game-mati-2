@@ -1,4 +1,6 @@
 // 住民システム
+import { StateMachine, ResidentStates } from '../ai/StateMachine.js';
+
 export class ResidentSystem {
     constructor(scene, professions, needsConfig) {
         this.scene = scene;
@@ -39,7 +41,11 @@ export class ResidentSystem {
             home: null,
             inventory: {},
             experience: 0,
-            mesh: null
+            mesh: null,
+            ai: new StateMachine(ResidentStates, 'IDLE'),
+            calculatePath: (start, end) => this.calculatePath(start, end),
+            findNearestFoodSource: () => this.findNearestFoodSource(resident),
+            performWork: () => this.performWork(resident)
         };
 
         // 3Dモデルの作成
@@ -52,6 +58,10 @@ export class ResidentSystem {
         this.residents.set(residentId, resident);
 
         console.log(`Resident spawned: ${resident.name} (${profession.name})`);
+        
+        // 家を割り当て
+        this.assignHome(resident);
+        
         return resident;
     }
 
@@ -187,105 +197,11 @@ export class ResidentSystem {
 
     // AI更新
     updateAI(resident, deltaTime) {
-        resident.stateTimer += deltaTime;
-
-        switch (resident.state) {
-            case 'idle':
-                this.updateIdle(resident, deltaTime);
-                break;
-            case 'moving':
-                this.updateMoving(resident, deltaTime);
-                break;
-            case 'working':
-                this.updateWorking(resident, deltaTime);
-                break;
-            case 'resting':
-                this.updateResting(resident, deltaTime);
-                break;
-        }
+        // 新しいステートマシンを使用
+        resident.ai.update(resident, deltaTime);
+        resident.state = resident.ai.getCurrentState().toLowerCase();
     }
 
-    // アイドル状態の更新
-    updateIdle(resident, deltaTime) {
-        // 職業がある場合は仕事を探す
-        if (resident.profession.id !== 'none' && resident.stateTimer > 2) {
-            this.findWork(resident);
-            resident.stateTimer = 0;
-        }
-    }
-
-    // 移動状態の更新
-    updateMoving(resident, deltaTime) {
-        if (!resident.path || resident.path.length === 0) {
-            resident.state = 'idle';
-            return;
-        }
-
-        const speed = resident.profession.moveSpeed || 0.05;
-        const target = resident.path[resident.pathIndex];
-        
-        const dx = target.x - resident.position.x;
-        const dz = target.z - resident.position.z;
-        const distance = Math.sqrt(dx * dx + dz * dz);
-
-        if (distance < 0.1) {
-            resident.pathIndex++;
-            if (resident.pathIndex >= resident.path.length) {
-                // 目的地に到着
-                resident.path = [];
-                resident.pathIndex = 0;
-                resident.state = 'working';
-            }
-        } else {
-            // 移動
-            const moveX = (dx / distance) * speed;
-            const moveZ = (dz / distance) * speed;
-            
-            resident.position.x += moveX;
-            resident.position.z += moveZ;
-            
-            // メッシュの更新
-            resident.mesh.position.x = resident.position.x;
-            resident.mesh.position.z = resident.position.z;
-            
-            // 進行方向を向く
-            const angle = Math.atan2(dx, dz);
-            resident.mesh.rotation.y = angle;
-        }
-    }
-
-    // 作業状態の更新
-    updateWorking(resident, deltaTime) {
-        // 職業別の作業処理
-        if (resident.workplace) {
-            const efficiency = 1.0 + (resident.experience * 0.01); // 経験値によるボーナス
-            
-            // 経験値の獲得
-            resident.experience += deltaTime * 0.1;
-            
-            // 作業アニメーション
-            if (resident.profession.id === 'farmer') {
-                // 農作業のアニメーション
-                resident.mesh.rotation.x = Math.sin(resident.stateTimer * 3) * 0.1;
-            } else if (resident.profession.id === 'builder') {
-                // 建築作業のアニメーション
-                resident.mesh.position.y = Math.abs(Math.sin(resident.stateTimer * 4)) * 0.1;
-            }
-        } else {
-            resident.state = 'idle';
-        }
-    }
-
-    // 休憩状態の更新
-    updateResting(resident, deltaTime) {
-        // エネルギーを回復
-        resident.needs.energy += deltaTime * 10;
-        
-        if (resident.needs.energy >= this.needsConfig.energy.max) {
-            resident.needs.energy = this.needsConfig.energy.max;
-            resident.state = 'idle';
-        }
-    }
 
     // アニメーションの更新
     updateAnimation(resident, deltaTime) {
@@ -312,6 +228,33 @@ export class ResidentSystem {
                 }
             }
         }
+    }
+    
+    // 家を割り当て
+    assignHome(resident) {
+        if (window.game && window.game.buildingSystem) {
+            const houses = window.game.buildingSystem.getBuildingsByType('house');
+            
+            // 空きがある家を探す
+            for (const house of houses) {
+                if (house.isComplete) {
+                    const capacity = house.config.capacity || 4;
+                    const currentResidents = this.getResidentsByHome(house.id).length;
+                    
+                    if (currentResidents < capacity) {
+                        resident.home = house;
+                        console.log(`${resident.name} assigned to house at (${house.x}, ${house.z})`);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    // 特定の家に住む住民を取得
+    getResidentsByHome(houseId) {
+        return this.getAllResidents().filter(r => r.home && r.home.id === houseId);
     }
 
     // 職業に対応する職場タイプを取得
@@ -417,5 +360,81 @@ export class ResidentSystem {
     // すべての住民を取得
     getAllResidents() {
         return Array.from(this.residents.values());
+    }
+    
+    // 最寄りの食料源を探す
+    findNearestFoodSource(resident) {
+        let nearest = null;
+        let minDistance = Infinity;
+        
+        // 納屋を探す
+        if (window.game?.buildingSystem) {
+            const barns = window.game.buildingSystem.getBuildingsByType('barn');
+            for (const barn of barns) {
+                if (barn.isComplete) {
+                    const distance = this.calculateDistance(resident.position, barn);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearest = { x: barn.x, z: barn.z };
+                    }
+                }
+            }
+            
+            // 市場も探す
+            const markets = window.game.buildingSystem.getBuildingsByType('market');
+            for (const market of markets) {
+                if (market.isComplete) {
+                    const distance = this.calculateDistance(resident.position, market);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearest = { x: market.x, z: market.z };
+                    }
+                }
+            }
+        }
+        
+        return nearest;
+    }
+    
+    // 作業を実行
+    performWork(resident) {
+        if (!resident.workplace) return;
+        
+        // 職業別の作業処理
+        switch (resident.profession.id) {
+            case 'farmer':
+                // 農作業（FarmingSystemが処理）
+                break;
+            case 'builder':
+                // 建築作業（BuildingSystemが処理）
+                break;
+            case 'lumberjack':
+                // 木材収集
+                if (window.game?.resourceManager) {
+                    window.game.resourceManager.add({ wood: 1 });
+                }
+                break;
+            case 'miner':
+                // 採掘
+                if (window.game?.resourceManager) {
+                    const rand = Math.random();
+                    if (rand < 0.7) {
+                        window.game.resourceManager.add({ stone: 1 });
+                    } else {
+                        window.game.resourceManager.add({ iron: 1 });
+                    }
+                }
+                break;
+        }
+        
+        // 経験値を獲得
+        resident.experience += 0.1;
+    }
+    
+    // 距離を計算
+    calculateDistance(pos1, pos2) {
+        const dx = pos1.x - pos2.x;
+        const dz = pos1.z - pos2.z;
+        return Math.sqrt(dx * dx + dz * dz);
     }
 }
