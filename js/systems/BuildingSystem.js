@@ -1,4 +1,6 @@
 // 建物システム
+import { ConstructionEffects } from '../effects/ConstructionEffects.js';
+
 export class BuildingSystem {
     constructor(scene, buildingConfigs) {
         this.scene = scene;
@@ -8,6 +10,9 @@ export class BuildingSystem {
         this.buildingGroup = new THREE.Group();
         this.buildingGroup.name = 'buildings';
         this.scene.add(this.buildingGroup);
+        
+        // 建設エフェクトシステム
+        this.constructionEffects = new ConstructionEffects(scene);
     }
 
     // 建物を配置
@@ -42,6 +47,11 @@ export class BuildingSystem {
         this.buildingGroup.add(building.mesh);
 
         this.buildings.set(buildingId, building);
+        
+        // 建設エフェクトを開始（即座に建設の場合は除く）
+        if (!instant) {
+            this.constructionEffects.startConstruction(building);
+        }
 
         console.log(`Building placed: ${config.name} at (${building.x}, ${building.z})`);
         return building;
@@ -73,7 +83,7 @@ export class BuildingSystem {
             // 建物タイプ別の詳細
             this.addBuildingDetails(group, building);
         } else {
-            // 建設中の建物
+            // 建設中の建物（半透明の輪郭のみ）
             const height = (config.size.height || 3) * building.progress;
             const geometry = new THREE.BoxGeometry(
                 config.size.width,
@@ -82,15 +92,12 @@ export class BuildingSystem {
             );
             const material = new THREE.MeshStandardMaterial({
                 color: 0x808080,
-                opacity: 0.7,
+                opacity: 0.3,
                 transparent: true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.position.y = height / 2;
             group.add(mesh);
-
-            // 建設中の足場
-            this.addConstructionScaffolding(group, config);
         }
 
         return group;
@@ -212,6 +219,8 @@ export class BuildingSystem {
                     } else {
                         // メッシュの更新
                         this.updateBuildingMesh(building);
+                        // 建設エフェクトの更新
+                        this.constructionEffects.updateConstruction(building, building.progress);
                     }
                 }
             } else {
@@ -221,11 +230,17 @@ export class BuildingSystem {
                 }
             }
         });
+        
+        // 建設エフェクトシステムの更新
+        this.constructionEffects.update(deltaTime);
     }
 
     // 建物の完成処理
     completeBuilding(building) {
         console.log(`Building completed: ${building.config.name}`);
+        
+        // 建設エフェクトの完了処理
+        this.constructionEffects.completeConstruction(building);
         
         // メッシュを再作成
         this.buildingGroup.remove(building.mesh);
