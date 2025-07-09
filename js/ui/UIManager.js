@@ -80,6 +80,14 @@ export class UIManager {
             });
         }
         
+        // 市場ボタン
+        const btnMarket = document.getElementById('btn-market');
+        if (btnMarket) {
+            btnMarket.addEventListener('click', () => {
+                this.game.marketUI.toggle();
+            });
+        }
+        
         // ウィンドウの閉じるボタン
         document.querySelectorAll('.window-close').forEach(btn => {
             btn.addEventListener('click', (e) => {

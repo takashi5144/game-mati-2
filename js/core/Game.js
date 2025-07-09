@@ -17,6 +17,8 @@ import { SaveLoadSystem } from '../systems/SaveLoadSystem.js';
 import { SaveLoadUI } from '../ui/SaveLoadUI.js';
 import { WeatherSystem } from '../systems/WeatherSystem.js';
 import { WeatherUI } from '../ui/WeatherUI.js';
+import { EconomySystem } from '../systems/EconomySystem.js';
+import { MarketUI } from '../ui/MarketUI.js';
 
 export class Game {
     constructor(config) {
@@ -50,6 +52,8 @@ export class Game {
         this.saveLoadUI = null;
         this.weatherSystem = null;
         this.weatherUI = null;
+        this.economySystem = null;
+        this.marketUI = null;
         
         // ゲーム状態
         this.selectedObject = null;
@@ -148,6 +152,14 @@ export class Game {
         // 天候UI
         this.weatherUI = new WeatherUI(this.ui, this.weatherSystem);
         this.weatherUI.init();
+        
+        // 経済システム
+        this.economySystem = new EconomySystem(this);
+        this.economySystem.init();
+        
+        // 市場UI
+        this.marketUI = new MarketUI(this.ui, this.economySystem);
+        this.marketUI.init();
     }
 
     async generateWorld() {
@@ -288,6 +300,7 @@ export class Game {
         this.buildingSystem.update(deltaTime);
         this.farmingSystem.update(deltaTime);
         this.productionSystem.update(deltaTime);
+        this.economySystem.update(deltaTime);
         this.resourceManager.update(deltaTime, this.residentSystem.getPopulation());
         this.eventSystem.update(deltaTime);
         

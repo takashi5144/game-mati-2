@@ -187,6 +187,11 @@ export class InputHandler {
             case 'KeyP':
                 this.game.ui.openResidentPanel();
                 break;
+            case 'KeyM':
+                if (this.game.marketUI) {
+                    this.game.marketUI.toggle();
+                }
+                break;
             case 'F5':
                 event.preventDefault();
                 if (event.ctrlKey) {
