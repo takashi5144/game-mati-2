@@ -212,6 +212,11 @@ export class SaveLoadSystem {
             console.log(`✅ ゲームセーブ完了: ${slotName}`);
             this.game.uiManager?.showNotification('セーブしました', 'success');
             
+            // イベントを発火
+            window.dispatchEvent(new CustomEvent('gameSaved', {
+                detail: { slotName: slotName }
+            }));
+            
             return true;
         } catch (error) {
             console.error('セーブエラー:', error);

@@ -306,6 +306,18 @@ export class ResidentSystem {
         return path;
     }
 
+    // 職業を割り当て（changeProfessionのエイリアス）
+    assignProfession(resident, professionId) {
+        if (typeof resident === 'string') {
+            // IDが渡された場合
+            return this.changeProfession(resident, professionId);
+        } else if (resident && resident.id) {
+            // 住民オブジェクトが渡された場合
+            return this.changeProfession(resident.id, professionId);
+        }
+        return false;
+    }
+    
     // 職業を変更
     changeProfession(residentId, newProfessionId) {
         const resident = this.residents.get(residentId);
@@ -334,6 +346,15 @@ export class ResidentSystem {
         this.residentGroup.add(resident.mesh);
 
         console.log(`${resident.name} changed profession to ${newProfession.name}`);
+        
+        // イベントを発火
+        window.dispatchEvent(new CustomEvent('professionAssigned', {
+            detail: {
+                resident: resident,
+                profession: newProfessionId
+            }
+        }));
+        
         return true;
     }
 

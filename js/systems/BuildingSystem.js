@@ -54,6 +54,15 @@ export class BuildingSystem {
         }
 
         console.log(`Building placed: ${config.name} at (${building.x}, ${building.z})`);
+        
+        // イベントを発火
+        window.dispatchEvent(new CustomEvent('buildingPlaced', {
+            detail: {
+                building: building,
+                type: type
+            }
+        }));
+        
         return building;
     }
 

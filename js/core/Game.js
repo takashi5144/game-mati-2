@@ -19,6 +19,7 @@ import { WeatherSystem } from '../systems/WeatherSystem.js';
 import { WeatherUI } from '../ui/WeatherUI.js';
 import { EconomySystem } from '../systems/EconomySystem.js';
 import { MarketUI } from '../ui/MarketUI.js';
+import { TutorialSystem } from '../systems/TutorialSystem.js';
 
 export class Game {
     constructor(config) {
@@ -54,6 +55,7 @@ export class Game {
         this.weatherUI = null;
         this.economySystem = null;
         this.marketUI = null;
+        this.tutorialSystem = null;
         
         // ゲーム状態
         this.selectedObject = null;
@@ -160,6 +162,10 @@ export class Game {
         // 市場UI
         this.marketUI = new MarketUI(this.ui, this.economySystem);
         this.marketUI.init();
+        
+        // チュートリアルシステム
+        this.tutorialSystem = new TutorialSystem(this);
+        this.tutorialSystem.init();
     }
 
     async generateWorld() {

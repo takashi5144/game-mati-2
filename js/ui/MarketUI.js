@@ -431,6 +431,9 @@ export class MarketUI {
         this.isOpen = true;
         this.window.classList.remove('hidden');
         this.refresh();
+        
+        // イベントを発火
+        window.dispatchEvent(new CustomEvent('marketOpened'));
     }
     
     close() {
