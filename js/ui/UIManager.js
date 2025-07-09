@@ -1,4 +1,6 @@
 // UI管理クラス
+import { UIAnimations } from './UIAnimations.js';
+
 export class UIManager {
     constructor(game) {
         this.game = game;
@@ -6,12 +8,16 @@ export class UIManager {
         this.windows = new Map();
         this.notifications = [];
         this.selectionBox = null;
+        this.animations = new UIAnimations();
+        this.lastResourceValues = new Map();
     }
 
     init() {
         this.cacheElements();
         this.setupEventListeners();
         this.initializeWindows();
+        this.animations.init();
+        this.animations.enableButtonAnimations();
         console.log('✅ UIManager 初期化完了');
     }
 
@@ -113,6 +119,26 @@ export class UIManager {
             isOpen: false
         });
     }
+    
+    // 定期更新
+    update(deltaTime) {
+        // リソースの更新
+        if (this.game.resourceManager) {
+            this.updateResourceDisplay(this.game.resourceManager.resources);
+        }
+        
+        // 人口の更新
+        if (this.game.residentSystem) {
+            this.updatePopulation(
+                this.game.residentSystem.getPopulation(),
+                this.game.residentSystem.getMaxPopulation()
+            );
+            
+            // 幸福度の更新
+            const happiness = this.game.residentSystem.getAverageHappiness();
+            this.updateHappiness(happiness);
+        }
+    }
 
     // リソース表示の更新
     updateResourceDisplay(resources) {
@@ -121,7 +147,36 @@ export class UIManager {
         basicResources.forEach(resource => {
             const element = this.elements.get(`resource-${resource}`);
             if (element && resources.has(resource)) {
-                element.textContent = Math.floor(resources.get(resource).current);
+                const currentValue = Math.floor(resources.get(resource).current);
+                const lastValue = this.lastResourceValues.get(resource) || currentValue;
+                
+                // 値が変化した場合
+                if (currentValue !== lastValue) {
+                    // アニメーション付きで更新
+                    if (Math.abs(currentValue - lastValue) > 10) {
+                        // 大きな変化の場合はカウントアップアニメーション
+                        this.animations.countUp(element, lastValue, currentValue, 500);
+                    } else {
+                        element.textContent = currentValue;
+                    }
+                    
+                    // 変化量を表示
+                    const change = currentValue - lastValue;
+                    if (change !== 0 && Math.abs(change) < 100) {
+                        this.animations.showResourceChange(element, change, change > 0);
+                    }
+                    
+                    // パルスアニメーション
+                    if (change > 0) {
+                        this.animations.pulse(element, 1);
+                    } else if (change < 0) {
+                        this.animations.shake(element, 300);
+                    }
+                    
+                    this.lastResourceValues.set(resource, currentValue);
+                } else {
+                    element.textContent = currentValue;
+                }
             }
         });
         
@@ -131,7 +186,19 @@ export class UIManager {
         cropResources.forEach(resource => {
             const element = document.getElementById(`resource-${resource}`);
             if (element && resources.has(resource)) {
-                element.textContent = Math.floor(resources.get(resource).current);
+                const currentValue = Math.floor(resources.get(resource).current);
+                const lastValue = this.lastResourceValues.get(resource) || currentValue;
+                
+                if (currentValue !== lastValue) {
+                    element.textContent = currentValue;
+                    
+                    const change = currentValue - lastValue;
+                    if (change !== 0 && Math.abs(change) < 100) {
+                        this.animations.showResourceChange(element, change, change > 0);
+                    }
+                    
+                    this.lastResourceValues.set(resource, currentValue);
+                }
             }
         });
     }
@@ -285,6 +352,8 @@ export class UIManager {
         if (window) {
             window.element.classList.remove('hidden');
             window.isOpen = true;
+            // アニメーション付きで表示
+            this.animations.bounceIn(window.element);
         }
     }
 
@@ -366,13 +435,22 @@ export class UIManager {
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            animation: slideIn 0.3s ease-out;
             font-size: 16px;
             font-weight: bold;
         `;
         
         document.body.appendChild(notification);
         this.notifications.push(notification);
+        
+        // アニメーション付きで表示
+        this.animations.slideIn(notification, 'top', 300);
+        
+        // 危険な通知は振動させる
+        if (type === 'danger' || type === 'error') {
+            setTimeout(() => {
+                this.animations.shake(notification, 300);
+            }, 300);
+        }
         
         // 3秒後に削除（災害通知は長めに表示）
         const duration = type === 'danger' ? 5000 : 3000;

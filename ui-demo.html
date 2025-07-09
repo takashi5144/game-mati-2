@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI アニメーション デモ</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        body {
+            background: #1a1a2e;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .demo-section {
+            margin: 40px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        
+        .demo-section h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .demo-button {
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .demo-button:hover {
+            background: #00cc66;
+            transform: translateY(-2px);
+        }
+        
+        .resource-demo {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .resource-item {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .loader-showcase {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .progress-demo {
+            margin: 20px 0;
+        }
+        
+        .notification-area {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: #00ff88; text-align: center;">UI アニメーション デモ</h1>
+    
+    <!-- リソースアニメーション -->
+    <div class="demo-section">
+        <h2>リソース変更アニメーション</h2>
+        <div class="demo-controls">
+            <button class="demo-button" onclick="demoResourceChange('food', 50, true)">食料 +50</button>
+            <button class="demo-button" onclick="demoResourceChange('food', -20, false)">食料 -20</button>
+            <button class="demo-button" onclick="demoResourceChange('wood', 100, true)">木材 +100</button>
+            <button class="demo-button" onclick="demoResourceChange('money', 500, true)">お金 +500</button>
+        </div>
+        <div class="resource-demo">
+            <div class="resource-item">
+                <span class="resource-icon">🌾</span>
+                <span id="demo-resource-food">100</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">🪵</span>
+                <span id="demo-resource-wood">50</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">💰</span>
+                <span id="demo-resource-money">1000</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ローディングアニメーション -->
+    <div class="demo-section">
+        <h2>ローディングアニメーション</h2>
+        <div class="loader-showcase" id="loader-showcase"></div>
+    </div>
+    
+    <!-- プログレスバー -->
+    <div class="demo-section">
+        <h2>プログレスバー</h2>
+        <div class="demo-controls">
+            <button class="demo-button" onclick="demoProgress('demo1', 25)">25%</button>
+            <button class="demo-button" onclick="demoProgress('demo1', 50)">50%</button>
+            <button class="demo-button" onclick="demoProgress('demo1', 75)">75%</button>
+            <button class="demo-button" onclick="demoProgress('demo1', 100)">100%</button>
+        </div>
+        <div class="progress-demo" id="progress-demo"></div>
+    </div>
+    
+    <!-- 通知 -->
+    <div class="demo-section">
+        <h2>通知アニメーション</h2>
+        <div class="demo-controls">
+            <button class="demo-button" onclick="demoNotification('info')">情報通知</button>
+            <button class="demo-button" onclick="demoNotification('success')">成功通知</button>
+            <button class="demo-button" onclick="demoNotification('warning')">警告通知</button>
+            <button class="demo-button" onclick="demoNotification('danger')">災害通知</button>
+        </div>
+    </div>
+    
+    <!-- ボタンエフェクト -->
+    <div class="demo-section">
+        <h2>ボタンエフェクト</h2>
+        <div class="demo-controls">
+            <button class="demo-button" id="pulse-btn">パルス</button>
+            <button class="demo-button" id="bounce-btn">バウンス</button>
+            <button class="demo-button" id="shake-btn">シェイク</button>
+            <button class="demo-button" id="glow-btn">グロー</button>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { UIAnimations } from './js/ui/UIAnimations.js';
+        import { UIProgressElements } from './js/ui/UIProgressElements.js';
+        
+        const animations = new UIAnimations();
+        const progressElements = new UIProgressElements();
+        
+        animations.init();
+        
+        // リソース変更デモ
+        window.demoResourceChange = (resource, amount, positive) => {
+            const element = document.getElementById(`demo-resource-${resource}`);
+            const current = parseInt(element.textContent);
+            const newValue = current + amount;
+            
+            animations.countUp(element, current, newValue, 500);
+            animations.showResourceChange(element, amount, positive);
+            
+            if (positive) {
+                animations.pulse(element);
+            } else {
+                animations.shake(element, 300);
+            }
+        };
+        
+        // ローダーの表示
+        const loaderShowcase = document.getElementById('loader-showcase');
+        
+        const spinner = progressElements.createLoader('spinner', { 
+            type: 'spinner', 
+            color: '#00ff88',
+            text: 'Loading...'
+        });
+        
+        const dots = progressElements.createLoader('dots', { 
+            type: 'dots', 
+            color: '#ffd700' 
+        });
+        
+        const ring = progressElements.createLoader('ring', { 
+            type: 'ring', 
+            color: '#ff6b6b',
+            size: '50px'
+        });
+        
+        const cube = progressElements.createLoader('cube', { 
+            type: 'cube', 
+            color: '#00ffdd',
+            size: '40px'
+        });
+        
+        loaderShowcase.appendChild(spinner);
+        loaderShowcase.appendChild(dots);
+        loaderShowcase.appendChild(ring);
+        loaderShowcase.appendChild(cube);
+        
+        // プログレスバーの作成
+        const progressDemo = document.getElementById('progress-demo');
+        const progressBar = progressElements.createProgressBar('demo1', {
+            label: '建設進捗',
+            width: '400px',
+            fillColor: 'linear-gradient(90deg, #00ff88, #00ffdd)',
+            onComplete: () => {
+                animations.pulse(progressBar, 3);
+            }
+        });
+        progressDemo.appendChild(progressBar);
+        
+        window.demoProgress = (id, value) => {
+            progressElements.updateProgressBar(id, value, true);
+        };
+        
+        // 通知デモ
+        window.demoNotification = (type) => {
+            const messages = {
+                info: 'これは情報通知です',
+                success: '建設が完了しました！',
+                warning: '資源が不足しています',
+                danger: '火災が発生しました！'
+            };
+            
+            const icons = {
+                info: 'ℹ️',
+                success: '✅',
+                warning: '⚠️',
+                danger: '🔥'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `${icons[type]} ${messages[type]}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'danger' ? 'rgba(200, 50, 50, 0.9)' : 
+                            type === 'warning' ? 'rgba(255, 200, 50, 0.9)' :
+                            type === 'success' ? 'rgba(50, 255, 50, 0.9)' :
+                            'rgba(50, 150, 255, 0.9)'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                font-size: 16px;
+                font-weight: bold;
+            `;
+            
+            document.body.appendChild(notification);
+            animations.slideIn(notification, 'top', 300);
+            
+            if (type === 'danger') {
+                setTimeout(() => animations.shake(notification, 300), 300);
+            }
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        };
+        
+        // ボタンエフェクト
+        document.getElementById('pulse-btn').addEventListener('click', (e) => {
+            animations.pulse(e.target, 3);
+        });
+        
+        document.getElementById('bounce-btn').addEventListener('click', (e) => {
+            animations.bounceIn(e.target);
+        });
+        
+        document.getElementById('shake-btn').addEventListener('click', (e) => {
+            animations.shake(e.target, 500);
+        });
+        
+        document.getElementById('glow-btn').addEventListener('click', (e) => {
+            animations.glow(e.target, 2000);
+        });
+        
+        // すべてのボタンにアニメーションを有効化
+        animations.enableButtonAnimations();
+    </script>
+</body>
+</html>
