@@ -336,6 +336,14 @@ export class ResidentSystem {
         
         // 建物に作業者として登録
         window.game.buildingSystem.assignWorker(building.id, resident.id);
+        
+        // 農場の場合は農業システムにも登録
+        if (building.type === 'farm' && window.game?.farmingSystem) {
+            const farm = window.game.farmingSystem.getFarmByBuilding(building.id);
+            if (farm) {
+                window.game.farmingSystem.assignWorker(farm.id, resident.id);
+            }
+        }
     }
 
     // パス計算（簡易版）

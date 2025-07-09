@@ -237,6 +237,15 @@ export class BuildingSystem {
 
         // エフェクトを追加
         this.addCompletionEffect(building);
+        
+        // 建物タイプ別の特別な処理
+        if (building.type === 'farm' && window.game?.farmingSystem) {
+            // 農場を作成
+            window.game.farmingSystem.createFarm(building);
+        } else if (building.type === 'house' && window.game?.residentSystem) {
+            // 人口上限を増やす
+            window.game.residentSystem.increaseMaxPopulation(building.config.capacity || 4);
+        }
     }
 
     // 完成エフェクト

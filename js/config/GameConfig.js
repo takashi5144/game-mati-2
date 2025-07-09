@@ -62,7 +62,11 @@ export const GameConfig = {
         wood: { current: 50, max: 500 },
         stone: { current: 0, max: 500 },
         iron: { current: 0, max: 200 },
-        money: { current: 1000, max: 99999 }
+        money: { current: 1000, max: 99999 },
+        wheat_seed: { current: 20, max: 100 },
+        corn_seed: { current: 10, max: 100 },
+        wheat: { current: 0, max: 500 },
+        corn: { current: 0, max: 500 }
     },
 
     // 建物設定

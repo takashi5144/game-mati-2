@@ -11,6 +11,7 @@ import { TerrainGenerator } from '../world/TerrainGenerator.js';
 import { EventSystem } from '../systems/EventSystem.js';
 import { ToolSystem } from '../systems/ToolSystem.js';
 import { CursorVisualizer } from '../ui/CursorVisualizer.js';
+import { FarmingSystem } from '../systems/FarmingSystem.js';
 
 export class Game {
     constructor(config) {
@@ -35,6 +36,7 @@ export class Game {
         this.resourceManager = null;
         this.buildingSystem = null;
         this.residentSystem = null;
+        this.farmingSystem = null;
         this.timeSystem = null;
         this.terrainGenerator = null;
         this.eventSystem = null;
@@ -110,6 +112,13 @@ export class Game {
         // イベントシステム
         this.eventSystem = new EventSystem(this.config.EVENTS);
         this.eventSystem.on('eventTriggered', (event) => this.onEventTriggered(event));
+        
+        // 農業システム
+        this.farmingSystem = new FarmingSystem(
+            this.sceneManager.scene,
+            this.config.CROPS,
+            this.config.SEASONS
+        );
     }
 
     async generateWorld() {
@@ -245,6 +254,7 @@ export class Game {
         this.timeSystem.update(deltaTime);
         this.residentSystem.update(deltaTime);
         this.buildingSystem.update(deltaTime);
+        this.farmingSystem.update(deltaTime);
         this.resourceManager.update(deltaTime, this.residentSystem.getPopulation());
         this.eventSystem.update(deltaTime);
         

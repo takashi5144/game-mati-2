@@ -62,6 +62,28 @@ export class ToolSystem {
                 rangeSelection: true,
                 color: 0x8B4513
             },
+            
+            // 農業ツール
+            'plant-wheat': {
+                type: 'farming',
+                action: 'plant',
+                crop: 'wheat',
+                cursor: 'pointer',
+                rangeSelection: false
+            },
+            'plant-corn': {
+                type: 'farming',
+                action: 'plant',
+                crop: 'corn',
+                cursor: 'pointer',
+                rangeSelection: false
+            },
+            'harvest': {
+                type: 'farming',
+                action: 'harvest',
+                cursor: 'pointer',
+                rangeSelection: false
+            },
             'clear-area': {
                 type: 'zone',
                 zoneType: 'clear',
@@ -160,6 +182,9 @@ export class ToolSystem {
                 break;
             case 'path':
                 this.placePath(worldPos);
+                break;
+            case 'farming':
+                this.handleFarmingAction(worldPos);
                 break;
         }
     }
@@ -397,6 +422,82 @@ export class ToolSystem {
     createStockpile(x, z, width, height) {
         // 貯蔵エリアを作成
         console.log('Creating stockpile area');
+    }
+    
+    handleFarmingAction(worldPos) {
+        if (!this.game.farmingSystem) return;
+        
+        // 最も近い農場を探す
+        let closestFarm = null;
+        let closestDistance = Infinity;
+        
+        this.game.buildingSystem.buildings.forEach(building => {
+            if (building.type === 'farm' && building.isComplete) {
+                const distance = Math.sqrt(
+                    Math.pow(building.x - worldPos.x, 2) + 
+                    Math.pow(building.z - worldPos.z, 2)
+                );
+                if (distance < closestDistance && distance < 5) { // 5ユニット以内
+                    closestDistance = distance;
+                    closestFarm = building;
+                }
+            }
+        });
+        
+        if (!closestFarm) {
+            this.game.ui.showNotification('農場が近くにありません', 'error');
+            return;
+        }
+        
+        const farm = this.game.farmingSystem.getFarmByBuilding(closestFarm.id);
+        if (!farm) return;
+        
+        // どのプロットか判定
+        let closestPlot = null;
+        let closestPlotIndex = -1;
+        let plotDistance = Infinity;
+        
+        farm.plots.forEach((plot, index) => {
+            const dist = Math.sqrt(
+                Math.pow(plot.x - worldPos.x, 2) + 
+                Math.pow(plot.z - worldPos.z, 2)
+            );
+            if (dist < plotDistance && dist < 1) { // 1ユニット以内
+                plotDistance = dist;
+                closestPlot = plot;
+                closestPlotIndex = index;
+            }
+        });
+        
+        if (!closestPlot) {
+            this.game.ui.showNotification('プロットが見つかりません', 'error');
+            return;
+        }
+        
+        // アクションを実行
+        if (this.toolData.action === 'plant') {
+            // 種があるかチェック
+            const seedResource = `${this.toolData.crop}_seed`;
+            if (!this.game.resourceManager.has(seedResource, 1)) {
+                this.game.ui.showNotification(`${this.toolData.crop}の種がありません`, 'error');
+                return;
+            }
+            
+            if (this.game.farmingSystem.plantCrop(farm.id, closestPlotIndex, this.toolData.crop)) {
+                this.game.resourceManager.consume({ [seedResource]: 1 });
+                this.game.ui.showNotification('作物を植えました', 'success');
+            } else {
+                this.game.ui.showNotification('ここには植えられません', 'error');
+            }
+        } else if (this.toolData.action === 'harvest') {
+            const harvest = this.game.farmingSystem.harvestCrop(farm.id, closestPlotIndex);
+            if (harvest) {
+                this.game.resourceManager.add({ [harvest.type]: harvest.amount });
+                this.game.ui.showNotification(`${harvest.type} x${harvest.amount}を収穫しました`, 'success');
+            } else {
+                this.game.ui.showNotification('収穫できる作物がありません', 'error');
+            }
+        }
     }
     
     update(deltaTime) {
