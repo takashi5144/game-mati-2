@@ -216,6 +216,28 @@ body {
     background: rgba(0, 255, 136, 0.3);
     border-color: #00ff88;
     box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    position: relative;
+    overflow: visible;
+}
+
+.tool-btn.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00ff88, transparent);
+    border-radius: 12px;
+    opacity: 0.5;
+    animation: pulse 2s infinite;
+    z-index: -1;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.02); }
+    100% { opacity: 0.3; transform: scale(1); }
 }
 
 .tool-icon {
@@ -434,4 +456,61 @@ body {
     .control-hints {
         display: none;
     }
+}
+
+/* 通知アニメーション */
+@keyframes slideIn {
+    from {
+        transform: translateX(-50%) translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-50%) translateY(-100%);
+        opacity: 0;
+    }
+}
+
+/* 選択ボックス */
+.selection-box {
+    position: fixed;
+    border: 2px solid #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* カーソル状態 */
+canvas {
+    cursor: grab;
+}
+
+canvas.tool-active {
+    cursor: pointer;
+}
+
+canvas.tool-demolish {
+    cursor: not-allowed;
+}
+
+canvas.tool-area {
+    cursor: crosshair;
+}
+
+canvas.panning {
+    cursor: grabbing;
+}
+
+canvas.rotating {
+    cursor: move;
 }

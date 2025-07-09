@@ -116,6 +116,13 @@ export class ToolSystem {
         // UIを更新
         this.game.ui.updateToolSelection(toolId);
         
+        // カーソルビジュアライザーの設定
+        if (this.game.cursorVisualizer) {
+            if (tool.type === 'zone' && tool.color) {
+                this.game.cursorVisualizer.setRangeColor(tool.color);
+            }
+        }
+        
         console.log(`Tool selected: ${toolId}`);
     }
     
@@ -134,6 +141,11 @@ export class ToolSystem {
         
         // UIを更新
         this.game.ui.updateToolSelection(null);
+        
+        // カーソルビジュアライザーをクリア
+        if (this.game.cursorVisualizer) {
+            this.game.cursorVisualizer.hideBuildingPreview();
+        }
     }
     
     handleClick(worldPos) {
@@ -211,6 +223,11 @@ export class ToolSystem {
         // 色を更新
         const color = this.validPlacement ? 0x00FF00 : 0xFF0000;
         this.preview.material.color.setHex(color);
+        
+        // カーソルビジュアライザーの更新
+        if (this.game.cursorVisualizer) {
+            this.game.cursorVisualizer.showBuildingPreview(this.toolData.buildingType, worldPos, this.validPlacement);
+        }
     }
     
     checkValidPlacement(x, z, buildingConfig) {

@@ -120,6 +120,11 @@ export class InputHandler {
         if (this.mouseDown.left && this.isSelecting) {
             this.selectionEnd = { x: currentX, y: currentY };
             this.updateSelection();
+            
+            // カーソルビジュアライザーの更新
+            if (this.game.cursorVisualizer) {
+                this.game.cursorVisualizer.updateRangeSelection(this.mouseWorldPos);
+            }
         }
         
         this.lastMouse.x = currentX;
@@ -243,6 +248,11 @@ export class InputHandler {
                 this.isSelecting = true;
                 this.selectionStart = { x, y };
                 this.selectionEnd = { x, y };
+                
+                // カーソルビジュアライザーで範囲選択開始
+                if (this.game.cursorVisualizer) {
+                    this.game.cursorVisualizer.startRangeSelection(this.mouseWorldPos);
+                }
             }
         } else {
             // 通常のクリック（選択など）
@@ -306,6 +316,11 @@ export class InputHandler {
         // 選択ボックスをクリア
         if (this.game.ui) {
             this.game.ui.clearSelectionBox();
+        }
+        
+        // カーソルビジュアライザーの範囲選択終了
+        if (this.game.cursorVisualizer) {
+            this.game.cursorVisualizer.endRangeSelection();
         }
     }
     

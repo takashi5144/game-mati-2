@@ -10,6 +10,7 @@ import { TimeSystem } from '../systems/TimeSystem.js';
 import { TerrainGenerator } from '../world/TerrainGenerator.js';
 import { EventSystem } from '../systems/EventSystem.js';
 import { ToolSystem } from '../systems/ToolSystem.js';
+import { CursorVisualizer } from '../ui/CursorVisualizer.js';
 
 export class Game {
     constructor(config) {
@@ -27,6 +28,7 @@ export class Game {
         this.inputHandler = null;
         this.ui = null;
         this.toolSystem = null;
+        this.cursorVisualizer = null;
         
         // ゲームシステム
         this.uiManager = null;
@@ -65,6 +67,9 @@ export class Game {
         this.ui.init();
         this.uiManager = this.ui; // 互換性のため
         
+        // カーソルビジュアライザーの初期化
+        this.cursorVisualizer = new CursorVisualizer(this.sceneManager.scene);
+        
         // ゲームシステムの初期化
         await this.initGameSystems();
         
@@ -73,6 +78,9 @@ export class Game {
         
         // 初期建物の配置
         this.placeInitialBuildings();
+        
+        // ウィンドウリサイズイベント
+        window.addEventListener('resize', () => this.onWindowResize());
         
         console.log('✅ Game.init() 完了');
     }
@@ -221,6 +229,18 @@ export class Game {
         // 入力の更新
         this.inputHandler.update(deltaTime);
         
+        // ツールシステムの更新
+        this.toolSystem.update(deltaTime);
+        
+        // カーソルの更新
+        const mousePos = this.inputHandler.getMouseWorldPosition();
+        if (mousePos) {
+            this.cursorVisualizer.updateCursorPosition(mousePos);
+            this.cursorVisualizer.showCursor(true);
+        } else {
+            this.cursorVisualizer.showCursor(false);
+        }
+        
         // ゲームシステムの更新
         this.timeSystem.update(deltaTime);
         this.residentSystem.update(deltaTime);
@@ -249,106 +269,7 @@ export class Game {
         console.log(`⏩ ゲーム速度: ${speed}x`);
     }
 
-    setCurrentTool(tool) {
-        this.currentTool = tool;
-        this.buildMode = tool;
-        this.ui.updateToolSelection(tool);
-        
-        // カーソルの更新
-        const cursorType = this.getToolCursor(tool);
-        this.renderer.domElement.style.cursor = cursorType;
-    }
 
-    cancelCurrentTool() {
-        this.currentTool = null;
-        this.buildMode = null;
-        this.uiManager.updateToolSelection(null);
-        this.renderer.domElement.style.cursor = 'grab';
-    }
-
-    // ツール関連のヘルパーメソッド
-    isAreaTool(tool) {
-        return ['harvest-area', 'farm-zone', 'clear-area', 'stockpile'].includes(tool);
-    }
-
-    getToolCursor(tool) {
-        if (this.isAreaTool(tool)) return 'crosshair';
-        if (tool === 'demolish') return 'not-allowed';
-        if (tool) return 'pointer';
-        return 'grab';
-    }
-
-    // クリック処理
-    handleClick(event) {
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        
-        const rect = this.renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        raycaster.setFromCamera(mouse, this.renderer.camera);
-        
-        // 地形との交差判定
-        const intersects = raycaster.intersectObjects(this.sceneManager.scene.children, true);
-        
-        if (intersects.length > 0) {
-            const point = intersects[0].point;
-            const object = intersects[0].object;
-            
-            // オブジェクトの種類に応じて処理
-            if (object.userData.type === 'terrain') {
-                this.handleTerrainClick(point.x, point.z);
-            } else if (object.userData.type === 'building') {
-                this.handleBuildingClick(object.userData.building);
-            } else if (object.userData.type === 'resident') {
-                this.handleResidentClick(object.userData.resident);
-            }
-        }
-    }
-
-    handleTerrainClick(x, z) {
-        if (this.currentTool) {
-            // 建物配置
-            if (this.config.BUILDINGS[this.currentTool.toUpperCase()]) {
-                this.tryPlaceBuilding(x, z, this.currentTool);
-            }
-        }
-    }
-
-    handleBuildingClick(building) {
-        this.selectObject(building);
-        this.ui.showBuildingInfo(building);
-    }
-
-    handleResidentClick(resident) {
-        this.selectObject(resident);
-        this.ui.showResidentInfo(resident);
-    }
-
-    tryPlaceBuilding(x, z, buildingType) {
-        const config = this.config.BUILDINGS[buildingType.toUpperCase()];
-        
-        // 資源チェック
-        if (!this.resourceManager.canAfford(config.cost)) {
-            this.ui.showNotification('資源が不足しています', 'error');
-            return;
-        }
-        
-        // 配置可能かチェック
-        if (!this.buildingSystem.canPlaceAt(x, z, buildingType)) {
-            this.ui.showNotification('ここには建設できません', 'error');
-            return;
-        }
-        
-        // 建物を配置
-        const building = this.buildingSystem.placeBuilding(x, z, buildingType);
-        if (building) {
-            this.resourceManager.consume(config.cost);
-            this.ui.showNotification(`${config.name}の建設を開始しました`, 'success');
-            this.hasChanges = true;
-        }
-    }
 
     // イベントハンドラー
     onDayChanged(day) {
@@ -391,46 +312,11 @@ export class Game {
     }
 
     onWindowResize() {
-        this.renderer.onWindowResize();
-        this.cameraController.onWindowResize();
-    }
-
-    // エリア選択関連
-    startAreaSelection(event) {
-        this.isSelectingArea = true;
-        this.selectionStart = { x: event.clientX, y: event.clientY };
-        this.ui.showSelectionBox(this.selectionStart.x, this.selectionStart.y);
-    }
-
-    updateAreaSelection(event) {
-        if (!this.isSelectingArea) return;
-        this.ui.updateSelectionBoxCoords(
-            this.selectionStart.x,
-            this.selectionStart.y,
-            event.clientX,
-            event.clientY
-        );
-    }
-
-    completeAreaSelection() {
-        if (!this.isSelectingArea) return;
-        this.isSelectingArea = false;
-        this.ui.hideSelectionBox();
-        
-        // エリア内のオブジェクトを処理
-        // TODO: 実装
-    }
-
-    updateHoverEffect(event) {
-        // ホバー効果の実装
-        // TODO: 実装
-    }
-
-    selectObject(object) {
-        if (this.selectedObject) {
-            // 前の選択を解除
+        if (this.renderer) {
+            this.renderer.camera.aspect = window.innerWidth / window.innerHeight;
+            this.renderer.camera.updateProjectionMatrix();
+            this.renderer.renderer.setSize(window.innerWidth, window.innerHeight);
         }
-        this.selectedObject = object;
-        // 選択エフェクトを追加
     }
+
 }
