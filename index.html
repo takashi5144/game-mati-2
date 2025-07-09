@@ -291,18 +291,42 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Three.jsの読み込み確認 -->
+    <!-- Three.jsの読み込み確認とゲーム起動 -->
     <script>
-        // Three.jsが読み込まれているか確認
-        if (typeof THREE === 'undefined') {
-            console.error('Three.js の読み込みに失敗しました');
-            document.getElementById('loading-text').textContent = 'エラー: Three.js の読み込みに失敗しました';
+        // Three.jsの読み込みを待つ
+        function checkThreeJS() {
+            if (typeof THREE !== 'undefined') {
+                console.log('Three.js', THREE.REVISION, 'を読み込みました');
+                
+                // Three.jsが読み込まれたらゲームモジュールを読み込む
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'js/main.js';
+                script.onerror = function(e) {
+                    console.error('main.js の読み込みエラー:', e);
+                    const loadingText = document.querySelector('.loading-text');
+                    if (loadingText) {
+                        loadingText.textContent = 'エラー: ゲームモジュールの読み込みに失敗しました';
+                        loadingText.style.color = '#ff6b6b';
+                    }
+                };
+                document.body.appendChild(script);
+            } else {
+                console.error('Three.js の読み込みに失敗しました');
+                const loadingText = document.querySelector('.loading-text');
+                if (loadingText) {
+                    loadingText.textContent = 'エラー: Three.js の読み込みに失敗しました';
+                    loadingText.style.color = '#ff6b6b';
+                }
+            }
+        }
+        
+        // DOMContentLoadedを待ってからチェック
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkThreeJS);
         } else {
-            console.log('Three.js', THREE.REVISION, 'を読み込みました');
+            checkThreeJS();
         }
     </script>
-    
-    <!-- ゲームモジュール -->
-    <script type="module" src="js/main.js"></script>
 </body>
 </html>

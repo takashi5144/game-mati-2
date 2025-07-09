@@ -1,6 +1,4 @@
 // ゲーム設定ファイル
-import { THREE } from '../three-global.js';
-
 export const GameConfig = {
     // ゲームの基本設定
     GAME: {
@@ -22,7 +20,7 @@ export const GameConfig = {
             powerPreference: 'high-performance',
             shadowMap: {
                 enabled: true,
-                type: THREE.PCFSoftShadowMap,
+                type: 'PCFSoftShadowMap', // 文字列として定義（後でTHREE.PCFSoftShadowMapに変換）
                 autoUpdate: true
             }
         },

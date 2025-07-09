@@ -68,19 +68,32 @@ export class Game {
     async init() {
         console.log('🎮 Game.init() 開始');
         
-        // レンダラーの初期化
-        this.renderer = new Renderer(this.config.GRAPHICS);
-        this.renderer.init();
-        
-        // シーン管理の初期化
-        this.sceneManager = new SceneManager();
-        this.sceneManager.init();
-        
-        // 入力ハンドラーの初期化
-        this.inputHandler = new InputHandler(this);
-        
-        // ツールシステムの初期化
-        this.toolSystem = new ToolSystem(this);
+        try {
+            // レンダラーの初期化
+            console.log('レンダラー初期化中...');
+            this.renderer = new Renderer(this.config.GRAPHICS);
+            this.renderer.init();
+            console.log('レンダラー初期化完了');
+            
+            // シーン管理の初期化
+            console.log('シーンマネージャー初期化中...');
+            this.sceneManager = new SceneManager();
+            this.sceneManager.init();
+            console.log('シーンマネージャー初期化完了');
+            
+            // 入力ハンドラーの初期化
+            console.log('入力ハンドラー初期化中...');
+            this.inputHandler = new InputHandler(this);
+            console.log('入力ハンドラー初期化完了');
+            
+            // ツールシステムの初期化
+            console.log('ツールシステム初期化中...');
+            this.toolSystem = new ToolSystem(this);
+            console.log('ツールシステム初期化完了');
+        } catch (error) {
+            console.error('Game.init() エラー:', error);
+            throw error;
+        }
         
         // UI管理の初期化
         this.ui = new UIManager(this);

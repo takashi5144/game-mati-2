@@ -46,12 +46,14 @@ class LoadingManager {
 
 // ゲーム初期化
 async function initGame() {
+    console.log('🎮 initGame 関数開始');
     const loadingManager = new LoadingManager();
     
     try {
         console.log('🎮 ピクセルファーム・フロンティア 3D v2 初期化開始...');
         
         // Three.jsの確認
+        console.log('Three.js チェック:', typeof THREE !== 'undefined' ? 'OK' : 'NG');
         if (typeof THREE === 'undefined') {
             throw new Error('Three.js が読み込まれていません');
         }
@@ -59,11 +61,18 @@ async function initGame() {
         loadingManager.setTotal(10);
         loadingManager.updateProgress(1, 'ゲームエンジン');
         
+        console.log('GameConfig をインポート中...');
+        console.log('GameConfig:', GameConfig);
+        
         // ゲームインスタンスの作成
+        console.log('Game インスタンスを作成中...');
         window.game = new Game(GameConfig);
+        console.log('Game インスタンス作成完了');
         
         loadingManager.updateProgress(2, 'レンダラー');
+        console.log('game.init() を呼び出し中...');
         await window.game.init();
+        console.log('game.init() 完了');
         
         loadingManager.updateProgress(4, '地形');
         loadingManager.updateProgress(6, 'モデル');
@@ -71,13 +80,29 @@ async function initGame() {
         loadingManager.updateProgress(10, '完了');
         
         // ゲーム開始
+        console.log('game.start() を呼び出し中...');
         window.game.start();
+        console.log('game.start() 完了');
         
         console.log('✅ ゲーム初期化完了');
         
     } catch (error) {
         console.error('❌ ゲーム初期化エラー:', error);
-        alert('ゲームの初期化中にエラーが発生しました: ' + error.message);
+        console.error('エラースタック:', error.stack);
+        
+        // ローディング画面にエラーを表示
+        const loadingText = document.querySelector('.loading-text');
+        if (loadingText) {
+            loadingText.textContent = `エラー: ${error.message}`;
+            loadingText.style.color = '#ff6b6b';
+        }
+        
+        // alert の代わりにコンソールとローディング画面に表示
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '1';
+            loadingScreen.style.display = 'flex';
+        }
     }
 }
 

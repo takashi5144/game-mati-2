@@ -1,13 +1,16 @@
 // Three.jsのグローバル変数を確保するためのモジュール
 // CDNから読み込まれたTHREEオブジェクトをエクスポート
 
-if (typeof THREE === 'undefined') {
+// グローバルスコープからTHREEを取得
+const THREE = window.THREE || globalThis.THREE;
+
+if (!THREE) {
     console.error('Three.js が読み込まれていません。index.htmlでThree.jsのCDNリンクを確認してください。');
     throw new Error('Three.js is not loaded');
 }
 
-// グローバルTHREEオブジェクトをエクスポート
-export default window.THREE;
-export const THREE = window.THREE;
-
 console.log('✅ Three.js グローバル変数を確保しました', THREE.REVISION);
+
+// グローバルTHREEオブジェクトをエクスポート
+export { THREE };
+export default THREE;

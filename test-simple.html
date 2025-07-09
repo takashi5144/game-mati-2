@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルテスト</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #222; color: #fff; font-family: monospace; }
+        #log { background: #000; padding: 10px; height: 400px; overflow: auto; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>シンプルテスト</h1>
+    <div id="canvas-container" style="width: 800px; height: 600px; border: 1px solid #fff;"></div>
+    <h2>ログ:</h2>
+    <div id="log"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+            console.log(`[${type}] ${message}`);
+        }
+        
+        // Three.jsテスト
+        addLog('Three.js テスト開始', 'info');
+        
+        if (typeof THREE !== 'undefined') {
+            addLog(`Three.js r${THREE.REVISION} が読み込まれました`, 'success');
+            
+            try {
+                // シンプルなシーンを作成
+                const scene = new THREE.Scene();
+                addLog('Scene 作成成功', 'success');
+                
+                const camera = new THREE.PerspectiveCamera(75, 800/600, 0.1, 1000);
+                camera.position.z = 5;
+                addLog('Camera 作成成功', 'success');
+                
+                const renderer = new THREE.WebGLRenderer();
+                renderer.setSize(800, 600);
+                document.getElementById('canvas-container').appendChild(renderer.domElement);
+                addLog('Renderer 作成成功', 'success');
+                
+                // キューブを追加
+                const geometry = new THREE.BoxGeometry();
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                addLog('Cube 追加成功', 'success');
+                
+                // アニメーション
+                function animate() {
+                    requestAnimationFrame(animate);
+                    cube.rotation.x += 0.01;
+                    cube.rotation.y += 0.01;
+                    renderer.render(scene, camera);
+                }
+                animate();
+                addLog('アニメーション開始', 'success');
+                
+            } catch (error) {
+                addLog(`Three.js エラー: ${error.message}`, 'error');
+            }
+        } else {
+            addLog('Three.js が見つかりません', 'error');
+        }
+        
+        // ES6モジュールテスト
+        addLog('ES6モジュールテスト開始', 'info');
+    </script>
+    
+    <script type="module">
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+            console.log(`[${type}] ${message}`);
+        }
+        
+        try {
+            addLog('three-global.js インポート中...', 'info');
+            const { THREE } = await import('./js/three-global.js');
+            addLog('three-global.js インポート成功', 'success');
+            addLog(`THREE object: ${typeof THREE}`, 'info');
+            
+            addLog('GameConfig インポート中...', 'info');
+            const { GameConfig } = await import('./js/config/GameConfig.js');
+            addLog('GameConfig インポート成功', 'success');
+            addLog(`GameConfig: ${JSON.stringify(GameConfig.GAME)}`, 'info');
+            
+        } catch (error) {
+            addLog(`モジュールエラー: ${error.message}`, 'error');
+            addLog(`スタック: ${error.stack}`, 'error');
+        }
+    </script>
+</body>
+</html>

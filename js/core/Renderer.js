@@ -25,7 +25,12 @@ export class Renderer {
         // シャドウマップの設定
         if (this.config.renderer.shadowMap.enabled) {
             this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = this.config.renderer.shadowMap.type;
+            // shadowMap.typeを文字列から適切なTHREE定数に変換
+            if (this.config.renderer.shadowMap.type === 'PCFSoftShadowMap') {
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            } else {
+                this.renderer.shadowMap.type = THREE.PCFShadowMap;
+            }
             this.renderer.shadowMap.autoUpdate = this.config.renderer.shadowMap.autoUpdate;
         }
 
