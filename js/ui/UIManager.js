@@ -22,6 +22,8 @@ export class UIManager {
         this.elements.set('resource-stone', document.getElementById('resource-stone'));
         this.elements.set('resource-iron', document.getElementById('resource-iron'));
         this.elements.set('resource-money', document.getElementById('resource-money'));
+        this.elements.set('resource-wheat', document.getElementById('resource-wheat'));
+        this.elements.set('resource-corn', document.getElementById('resource-corn'));
         this.elements.set('population', document.getElementById('population'));
         this.elements.set('happiness', document.getElementById('happiness'));
         
@@ -138,8 +140,28 @@ export class UIManager {
         this.elements.get('population').textContent = `${current}/${max}`;
     }
 
-    updateHappiness(happiness) {
-        this.elements.get('happiness').textContent = `${Math.floor(happiness)}%`;
+    updateHappiness(baseHappiness) {
+        // 建物ボーナスを計算
+        let totalBonus = 0;
+        if (this.game.happinessBonuses) {
+            for (const bonus of this.game.happinessBonuses.values()) {
+                totalBonus += bonus;
+            }
+        }
+        
+        // 最終的な幸福度を計算（最大100%）
+        const finalHappiness = Math.min(100, baseHappiness * (1 + totalBonus));
+        this.elements.get('happiness').textContent = `${Math.floor(finalHappiness)}%`;
+        
+        // 幸福度が低い場合は警告色に変更
+        const element = this.elements.get('happiness');
+        if (finalHappiness < 50) {
+            element.style.color = '#ff6b6b';
+        } else if (finalHappiness < 70) {
+            element.style.color = '#ffd93d';
+        } else {
+            element.style.color = '#51cf66';
+        }
     }
 
     updateDate(day) {

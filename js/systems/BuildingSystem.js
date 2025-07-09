@@ -120,7 +120,19 @@ export class BuildingSystem {
             barn: 0xA0522D,       // シエナ
             lumbermill: 0x654321, // ダークブラウン
             market: 0xFFD700,     // ゴールド
-            blacksmith: 0x2F4F4F  // ダークスレートグレー
+            blacksmith: 0x2F4F4F, // ダークスレートグレー
+            bakery: 0xF4A460,     // サンディブラウン
+            mill: 0xDEB887,       // バーリーウッド
+            mason: 0x696969,      // ディムグレー
+            well: 0x4682B4,       // スティールブルー
+            school: 0xB22222,     // ファイアブリック
+            chapel: 0xF5F5DC,     // ベージュ
+            tavern: 0x8B4513,     // サドルブラウン
+            guardhouse: 0x708090, // スレートグレー
+            herbalist: 0x228B22,  // フォレストグリーン
+            mine: 0x36454F,       // チャコール
+            townhall: 0xDAA520,   // ゴールデンロッド
+            warehouse: 0x8B7355   // バーリーウッド
         };
         return colors[type] || 0x808080;
     }
@@ -187,6 +199,92 @@ export class BuildingSystem {
                 const door = new THREE.Mesh(doorGeometry, doorMaterial);
                 door.position.set(0, config.size.height * 0.4, config.size.height / 2);
                 group.add(door);
+                break;
+                
+            case 'well':
+                // 井戸の円形構造
+                const wellRingGeometry = new THREE.CylinderGeometry(1, 1, 0.5, 16);
+                const wellRingMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x696969
+                });
+                const wellRing = new THREE.Mesh(wellRingGeometry, wellRingMaterial);
+                wellRing.position.y = 0.25;
+                group.add(wellRing);
+                
+                // バケツ用の支柱
+                const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2.5);
+                const poleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x654321
+                });
+                const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+                pole.position.set(0, 1.25, 0);
+                group.add(pole);
+                break;
+                
+            case 'school':
+                // 鐘楼
+                const bellTowerGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+                const bellTowerMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8B4513
+                });
+                const bellTower = new THREE.Mesh(bellTowerGeometry, bellTowerMaterial);
+                bellTower.position.set(0, config.size.height + 0.5, 0);
+                group.add(bellTower);
+                break;
+                
+            case 'chapel':
+                // 十字架
+                const crossVertical = new THREE.BoxGeometry(0.1, 1, 0.1);
+                const crossHorizontal = new THREE.BoxGeometry(0.5, 0.1, 0.1);
+                const crossMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xFFD700
+                });
+                const cross1 = new THREE.Mesh(crossVertical, crossMaterial);
+                const cross2 = new THREE.Mesh(crossHorizontal, crossMaterial);
+                cross1.position.set(0, config.size.height + 0.5, 0);
+                cross2.position.set(0, config.size.height + 0.7, 0);
+                group.add(cross1);
+                group.add(cross2);
+                break;
+                
+            case 'mill':
+                // 風車の羽根
+                const bladeGeometry = new THREE.BoxGeometry(3, 0.1, 0.5);
+                const bladeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xF5DEB3
+                });
+                for (let i = 0; i < 4; i++) {
+                    const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
+                    blade.position.set(0, config.size.height * 0.8, 0);
+                    blade.rotation.z = (i * Math.PI / 2);
+                    group.add(blade);
+                }
+                break;
+                
+            case 'townhall':
+                // 大きな時計塔
+                const clockTowerGeometry = new THREE.CylinderGeometry(0.8, 1, 2);
+                const clockTowerMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xDAA520
+                });
+                const clockTower = new THREE.Mesh(clockTowerGeometry, clockTowerMaterial);
+                clockTower.position.set(0, config.size.height + 1, 0);
+                group.add(clockTower);
+                break;
+                
+            case 'mine':
+                // 鉱山の入口
+                const entranceGeometry = new THREE.BoxGeometry(
+                    config.size.width * 0.4,
+                    config.size.height * 0.6,
+                    0.2
+                );
+                const entranceMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1C1C1C
+                });
+                const entrance = new THREE.Mesh(entranceGeometry, entranceMaterial);
+                entrance.position.set(0, config.size.height * 0.3, config.size.width / 2 - 0.1);
+                group.add(entrance);
                 break;
         }
     }
@@ -263,13 +361,7 @@ export class BuildingSystem {
         this.addCompletionEffect(building);
         
         // 建物タイプ別の特別な処理
-        if (building.type === 'farm' && window.game?.farmingSystem) {
-            // 農場を作成
-            window.game.farmingSystem.createFarm(building);
-        } else if (building.type === 'house' && window.game?.residentSystem) {
-            // 人口上限を増やす
-            window.game.residentSystem.increaseMaxPopulation(building.config.capacity || 4);
-        }
+        this.applyBuildingEffects(building);
     }
 
     // 完成エフェクト
@@ -414,5 +506,128 @@ export class BuildingSystem {
                 building.workers.splice(index, 1);
             }
         }
+    }
+    
+    // 建物の効果を適用
+    applyBuildingEffects(building) {
+        const effects = building.config.effects || {};
+        const game = window.game;
+        
+        if (!game) return;
+        
+        // 基本的な効果の処理
+        if (building.type === 'farm' && game.farmingSystem) {
+            // 農場を作成
+            game.farmingSystem.createFarm(building);
+        } else if (building.type === 'house' && game.residentSystem) {
+            // 人口上限を増やす
+            game.residentSystem.increaseMaxPopulation(building.config.capacity || 4);
+        }
+        
+        // 特殊効果の処理
+        if (effects.maxPopulation && game.residentSystem) {
+            game.residentSystem.increaseMaxPopulation(effects.maxPopulation);
+        }
+        
+        if (effects.maxPopulationBonus && game.residentSystem) {
+            // 町役場の人口ボーナス
+            game.residentSystem.increaseMaxPopulation(effects.maxPopulationBonus);
+        }
+        
+        if (effects.happinessBonus) {
+            // 幸福度ボーナスを記録（UIで使用）
+            if (!game.happinessBonuses) game.happinessBonuses = new Map();
+            game.happinessBonuses.set(building.id, effects.happinessBonus);
+        }
+        
+        if (effects.waterSupply) {
+            // 水供給量を記録（井戸）
+            if (!game.waterSupply) game.waterSupply = 0;
+            game.waterSupply += effects.waterSupply;
+        }
+        
+        if (effects.educationBonus) {
+            // 教育ボーナスを記録（学校）
+            if (!game.educationBonus) game.educationBonus = 0;
+            game.educationBonus = Math.max(game.educationBonus, effects.educationBonus);
+        }
+        
+        if (effects.skillGrowthRate) {
+            // スキル成長率を記録（学校）
+            if (!game.skillGrowthRate) game.skillGrowthRate = 1.0;
+            game.skillGrowthRate = Math.max(game.skillGrowthRate, effects.skillGrowthRate);
+        }
+        
+        if (effects.moraleBonus) {
+            // 士気ボーナスを記録（礼拝堂）
+            if (!game.moraleBonus) game.moraleBonus = 0;
+            game.moraleBonus = Math.max(game.moraleBonus, effects.moraleBonus);
+        }
+        
+        if (effects.defense) {
+            // 防衛力を記録（衛兵所）
+            if (!game.defenseRating) game.defenseRating = 0;
+            game.defenseRating += effects.defense;
+        }
+        
+        if (effects.crimeReduction) {
+            // 犯罪率減少を記録（衛兵所）
+            if (!game.crimeReduction) game.crimeReduction = 0;
+            game.crimeReduction = Math.max(game.crimeReduction, effects.crimeReduction);
+        }
+        
+        if (effects.healthBonus) {
+            // 健康ボーナスを記録（薬草医）
+            if (!game.healthBonus) game.healthBonus = 0;
+            game.healthBonus = Math.max(game.healthBonus, effects.healthBonus);
+        }
+        
+        if (effects.diseaseResistance) {
+            // 病気耐性を記録（薬草医）
+            if (!game.diseaseResistance) game.diseaseResistance = 0;
+            game.diseaseResistance = Math.max(game.diseaseResistance, effects.diseaseResistance);
+        }
+        
+        if (effects.taxEfficiency) {
+            // 税効率を記録（町役場）
+            if (!game.taxEfficiency) game.taxEfficiency = 1.0;
+            game.taxEfficiency = Math.max(game.taxEfficiency, effects.taxEfficiency);
+        }
+        
+        if (effects.administrationBonus) {
+            // 管理ボーナスを記録（町役場）
+            if (!game.administrationBonus) game.administrationBonus = 0;
+            game.administrationBonus = Math.max(game.administrationBonus, effects.administrationBonus);
+        }
+        
+        if (effects.unlockAdvancedBuildings) {
+            // 高度な建物のアンロック（町役場）
+            if (!game.advancedBuildingsUnlocked) game.advancedBuildingsUnlocked = true;
+        }
+        
+        if (effects.storageEfficiency) {
+            // 貯蔵効率を記録（倉庫）
+            if (!game.storageEfficiency) game.storageEfficiency = 1.0;
+            game.storageEfficiency = Math.max(game.storageEfficiency, effects.storageEfficiency);
+        }
+        
+        // 貯蔵容量の処理
+        if (building.config.storage && game.resourceManager) {
+            if (building.config.storage.all) {
+                // すべての資源の貯蔵容量を増やす（倉庫）
+                const increase = building.config.storage.all;
+                const resources = ['food', 'wood', 'stone', 'iron', 'wheat', 'corn'];
+                resources.forEach(resource => {
+                    game.resourceManager.increaseMaxStorage(resource, increase);
+                });
+            } else {
+                // 特定の資源の貯蔵容量を増やす
+                for (const [resource, amount] of Object.entries(building.config.storage)) {
+                    game.resourceManager.increaseMaxStorage(resource, amount);
+                }
+            }
+        }
+        
+        console.log(`Building effects applied for ${building.type}:`, effects);
     }
 }

@@ -132,4 +132,16 @@ export class ResourceManager {
             resource.max = max;
         }
     }
+    
+    // 最大貯蔵容量を増やす
+    increaseMaxStorage(resourceType, amount) {
+        if (!this.resources.has(resourceType)) {
+            this.resources.set(resourceType, { current: 0, max: amount });
+        } else {
+            const resource = this.resources.get(resourceType);
+            resource.max = (resource.max || 0) + amount;
+        }
+        this.notifyListeners('storageIncreased', { resource: resourceType, amount: amount });
+        console.log(`Storage increased for ${resourceType}: +${amount} (Total: ${this.resources.get(resourceType).max})`);
+    }
 }

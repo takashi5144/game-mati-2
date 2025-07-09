@@ -211,6 +211,166 @@ export const GameConfig = {
                 type: 'mason',
                 animations: ['carving']
             }
+        },
+        WELL: {
+            id: 'well',
+            name: '井戸',
+            category: 'infrastructure',
+            cost: { stone: 30, money: 200 },
+            buildTime: 40,
+            size: { width: 2, height: 2 },
+            effects: {
+                waterSupply: 50,
+                happinessBonus: 0.05
+            },
+            model: {
+                type: 'well',
+                animations: ['water']
+            }
+        },
+        SCHOOL: {
+            id: 'school',
+            name: '学校',
+            category: 'education',
+            cost: { wood: 40, stone: 40, money: 800 },
+            buildTime: 90,
+            size: { width: 4, height: 4 },
+            effects: {
+                educationBonus: 0.2,
+                happinessBonus: 0.1,
+                skillGrowthRate: 1.5
+            },
+            requiredWorkers: 2,
+            model: {
+                type: 'school',
+                animations: ['teaching']
+            }
+        },
+        CHAPEL: {
+            id: 'chapel',
+            name: '礼拝堂',
+            category: 'spiritual',
+            cost: { wood: 30, stone: 50, money: 600 },
+            buildTime: 80,
+            size: { width: 3, height: 4 },
+            effects: {
+                happinessBonus: 0.15,
+                moraleBonus: 0.2,
+                eventChanceReduction: 0.1
+            },
+            requiredWorkers: 1,
+            model: {
+                type: 'chapel',
+                animations: ['bell']
+            }
+        },
+        TAVERN: {
+            id: 'tavern',
+            name: '酒場',
+            category: 'entertainment',
+            cost: { wood: 35, stone: 25, money: 500 },
+            buildTime: 60,
+            size: { width: 3, height: 3 },
+            effects: {
+                happinessBonus: 0.2,
+                socialBonus: 0.15
+            },
+            consumption: { food: 1, money: 2 },
+            requiredWorkers: 2,
+            model: {
+                type: 'tavern',
+                animations: ['serving']
+            }
+        },
+        GUARDHOUSE: {
+            id: 'guardhouse',
+            name: '衛兵所',
+            category: 'defense',
+            cost: { wood: 40, stone: 60, iron: 20, money: 700 },
+            buildTime: 70,
+            size: { width: 3, height: 3 },
+            effects: {
+                defense: 20,
+                crimeReduction: 0.3,
+                safetyBonus: 0.1
+            },
+            requiredWorkers: 3,
+            model: {
+                type: 'guardhouse',
+                animations: ['patrol']
+            }
+        },
+        HERBALIST: {
+            id: 'herbalist',
+            name: '薬草医',
+            category: 'health',
+            cost: { wood: 25, stone: 15, money: 400 },
+            buildTime: 50,
+            size: { width: 2, height: 2 },
+            effects: {
+                healthBonus: 0.15,
+                diseaseResistance: 0.2
+            },
+            production: { herbs: 0.5 },
+            requiredWorkers: 1,
+            model: {
+                type: 'herbalist',
+                animations: ['brewing']
+            }
+        },
+        MINE: {
+            id: 'mine',
+            name: '鉱山',
+            category: 'production',
+            cost: { wood: 60, stone: 40, money: 1000 },
+            buildTime: 120,
+            size: { width: 4, height: 4 },
+            production: { stone: 2, iron: 1 },
+            requiredWorkers: 4,
+            requiresNearby: 'hills',
+            model: {
+                type: 'mine',
+                animations: ['mining']
+            }
+        },
+        TOWNHALL: {
+            id: 'townhall',
+            name: '町役場',
+            category: 'administration',
+            cost: { wood: 80, stone: 100, iron: 30, money: 2000 },
+            buildTime: 180,
+            size: { width: 5, height: 5 },
+            effects: {
+                maxPopulationBonus: 20,
+                taxEfficiency: 1.2,
+                administrationBonus: 0.3,
+                unlockAdvancedBuildings: true
+            },
+            requiredWorkers: 4,
+            unique: true,
+            model: {
+                type: 'townhall',
+                animations: ['flag']
+            }
+        },
+        WAREHOUSE: {
+            id: 'warehouse',
+            name: '倉庫',
+            category: 'storage',
+            cost: { wood: 50, stone: 30, money: 600 },
+            buildTime: 60,
+            size: { width: 4, height: 4 },
+            storage: {
+                all: 500
+            },
+            effects: {
+                storageEfficiency: 1.2
+            },
+            requiredWorkers: 2,
+            model: {
+                type: 'warehouse',
+                animations: ['loading']
+            }
         }
     },
 
