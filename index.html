@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピクセルファーム・フロンティア 3D v2</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <h1>ピクセルファーム・フロンティア 3D</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- メインゲームコンテナ -->
+    <div id="game-container" class="game-container"></div>
+
+    <!-- UI: 上部バー -->
+    <div id="ui-top" class="ui-top">
+        <div class="resource-panel">
+            <div class="resource-item">
+                <span class="resource-icon">🌾</span>
+                <span id="resource-food">0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">🪵</span>
+                <span id="resource-wood">0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">🪨</span>
+                <span id="resource-stone">0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">⚙️</span>
+                <span id="resource-iron">0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">💰</span>
+                <span id="resource-money">0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">👥</span>
+                <span id="population">0/0</span>
+            </div>
+            <div class="resource-item">
+                <span class="resource-icon">😊</span>
+                <span id="happiness">100%</span>
+            </div>
+        </div>
+        
+        <div class="time-panel">
+            <span id="season" class="season">春</span>
+            <span id="date" class="date">1日目</span>
+            <span id="weather" class="weather">☀️ 晴れ</span>
+        </div>
+        
+        <div class="control-panel">
+            <button id="btn-pause" class="control-btn" title="一時停止 (Space)">⏸️</button>
+            <button id="btn-speed-1" class="control-btn speed-btn active" data-speed="1" title="通常速度 (1)">1x</button>
+            <button id="btn-speed-2" class="control-btn speed-btn" data-speed="2" title="2倍速 (2)">2x</button>
+            <button id="btn-speed-3" class="control-btn speed-btn" data-speed="5" title="5倍速 (3)">5x</button>
+            <button id="btn-menu" class="control-btn" title="メニュー">☰</button>
+        </div>
+    </div>
+
+    <!-- UI: 下部ツールバー -->
+    <div id="ui-bottom" class="ui-bottom">
+        <div class="tool-categories">
+            <!-- 建設カテゴリ -->
+            <div class="tool-category">
+                <h3>🏗️ 建設</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn" data-tool="house" title="家 (H)">
+                        <span class="tool-icon">🏠</span>
+                        <span class="tool-name">家</span>
+                        <span class="tool-cost">木20 石10</span>
+                    </button>
+                    <button class="tool-btn" data-tool="farm" title="畑 (F)">
+                        <span class="tool-icon">🌾</span>
+                        <span class="tool-name">畑</span>
+                        <span class="tool-cost">木10</span>
+                    </button>
+                    <button class="tool-btn" data-tool="barn" title="納屋">
+                        <span class="tool-icon">🏚️</span>
+                        <span class="tool-name">納屋</span>
+                        <span class="tool-cost">木15</span>
+                    </button>
+                    <button class="tool-btn" data-tool="lumbermill" title="製材所">
+                        <span class="tool-icon">🪚</span>
+                        <span class="tool-name">製材所</span>
+                        <span class="tool-cost">木30 石20</span>
+                    </button>
+                    <button class="tool-btn" data-tool="market" title="市場">
+                        <span class="tool-icon">🏪</span>
+                        <span class="tool-name">市場</span>
+                        <span class="tool-cost">木40 石30</span>
+                    </button>
+                    <button class="tool-btn" data-tool="blacksmith" title="鍛冶屋">
+                        <span class="tool-icon">🔨</span>
+                        <span class="tool-name">鍛冶屋</span>
+                        <span class="tool-cost">木50 石40</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 範囲指定カテゴリ -->
+            <div class="tool-category">
+                <h3>📐 範囲指定</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn" data-tool="harvest-area" title="伐採エリア">
+                        <span class="tool-icon">🪓</span>
+                        <span class="tool-name">伐採</span>
+                    </button>
+                    <button class="tool-btn" data-tool="farm-zone" title="農地エリア">
+                        <span class="tool-icon">🌱</span>
+                        <span class="tool-name">農地</span>
+                    </button>
+                    <button class="tool-btn" data-tool="clear-area" title="整地エリア">
+                        <span class="tool-icon">🏗️</span>
+                        <span class="tool-name">整地</span>
+                    </button>
+                    <button class="tool-btn" data-tool="stockpile" title="備蓄エリア">
+                        <span class="tool-icon">📦</span>
+                        <span class="tool-name">備蓄</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 管理カテゴリ -->
+            <div class="tool-category">
+                <h3>⚙️ 管理</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn" data-tool="demolish" title="撤去 (Delete)">
+                        <span class="tool-icon">🔨</span>
+                        <span class="tool-name">撤去</span>
+                    </button>
+                    <button class="tool-btn" data-tool="upgrade" title="アップグレード">
+                        <span class="tool-icon">⬆️</span>
+                        <span class="tool-name">強化</span>
+                    </button>
+                    <button class="tool-btn" data-tool="repair" title="修理">
+                        <span class="tool-icon">🔧</span>
+                        <span class="tool-name">修理</span>
+                    </button>
+                    <button class="tool-btn" data-tool="priority" title="優先度">
+                        <span class="tool-icon">⚡</span>
+                        <span class="tool-name">優先度</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-hints">
+            <span>🖱️ 中ボタン: パン | 右ボタン: 回転 | ホイール: ズーム</span>
+            <span>⌨️ WASD: 移動 | QE: 回転 | BPM: パネル | ESC: キャンセル</span>
+        </div>
+    </div>
+
+    <!-- フローティングウィンドウ -->
+    <div id="window-resident" class="game-window hidden">
+        <div class="window-header">
+            <h2>住民管理</h2>
+            <button class="window-close">×</button>
+        </div>
+        <div class="window-tabs">
+            <button class="tab-btn active" data-tab="overview">概要</button>
+            <button class="tab-btn" data-tab="jobs">職業</button>
+            <button class="tab-btn" data-tab="needs">ニーズ</button>
+            <button class="tab-btn" data-tab="skills">スキル</button>
+        </div>
+        <div class="window-content">
+            <div id="tab-overview" class="tab-content active">
+                <!-- 住民リスト -->
+            </div>
+            <div id="tab-jobs" class="tab-content">
+                <!-- 職業管理 -->
+            </div>
+            <div id="tab-needs" class="tab-content">
+                <!-- ニーズ管理 -->
+            </div>
+            <div id="tab-skills" class="tab-content">
+                <!-- スキル管理 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 選択情報パネル -->
+    <div id="selection-info" class="selection-info hidden">
+        <h3 id="selection-title">選択中</h3>
+        <div id="selection-content"></div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- ゲームモジュール -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
