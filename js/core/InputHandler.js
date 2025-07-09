@@ -187,8 +187,36 @@ export class InputHandler {
             case 'KeyP':
                 this.game.ui.openResidentPanel();
                 break;
+            case 'F5':
+                event.preventDefault();
+                if (event.ctrlKey) {
+                    this.game.saveLoadSystem.quickSave();
+                }
+                break;
+            case 'F9':
+                event.preventDefault();
+                if (event.ctrlKey) {
+                    this.game.saveLoadSystem.load('quicksave');
+                }
+                break;
+            case 'KeyL':
+                if (event.ctrlKey) {
+                    event.preventDefault();
+                    this.game.saveLoadUI.open('load');
+                }
+                break;
+            case 'KeyS':
+                if (event.ctrlKey) {
+                    event.preventDefault();
+                    this.game.saveLoadUI.open('save');
+                }
+                break;
             case 'Escape':
-                this.game.toolSystem.cancelTool();
+                if (this.game.saveLoadUI && this.game.saveLoadUI.isOpen) {
+                    this.game.saveLoadUI.close();
+                } else {
+                    this.game.toolSystem.cancelTool();
+                }
                 break;
         }
     }

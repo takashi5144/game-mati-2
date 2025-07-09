@@ -1,7 +1,11 @@
 // 資源管理システム
 export class ResourceManager {
     constructor(initialResources) {
-        this.resources = JSON.parse(JSON.stringify(initialResources)); // ディープコピー
+        this.resources = new Map();
+        // 初期リソースをMapに変換
+        for (const [key, value] of Object.entries(initialResources)) {
+            this.resources.set(key, { ...value });
+        }
         this.listeners = new Map();
     }
 
@@ -14,7 +18,7 @@ export class ResourceManager {
         }
 
         // リソース上限のチェック
-        for (const [key, resource] of Object.entries(this.resources)) {
+        for (const [key, resource] of this.resources.entries()) {
             if (resource.max && resource.current > resource.max) {
                 resource.current = resource.max;
             }
@@ -30,10 +34,11 @@ export class ResourceManager {
     add(amounts) {
         for (const [key, amount] of Object.entries(amounts)) {
             // 動的にリソースを追加
-            if (!this.resources[key]) {
-                this.resources[key] = { current: 0, max: 1000 };
+            if (!this.resources.has(key)) {
+                this.resources.set(key, { current: 0, max: 1000 });
             }
-            this.resources[key].current += amount;
+            const resource = this.resources.get(key);
+            resource.current += amount;
         }
         this.notifyListeners('resourcesAdded', amounts);
     }
@@ -41,8 +46,9 @@ export class ResourceManager {
     // リソースの消費
     consume(amounts) {
         for (const [key, amount] of Object.entries(amounts)) {
-            if (this.resources[key]) {
-                this.resources[key].current -= amount;
+            if (this.resources.has(key)) {
+                const resource = this.resources.get(key);
+                resource.current -= amount;
             }
         }
         this.notifyListeners('resourcesConsumed', amounts);
@@ -51,7 +57,7 @@ export class ResourceManager {
     // リソースが足りるかチェック
     canAfford(costs) {
         for (const [key, amount] of Object.entries(costs)) {
-            if (!this.resources[key] || this.resources[key].current < amount) {
+            if (!this.resources.has(key) || this.resources.get(key).current < amount) {
                 return false;
             }
         }
@@ -61,21 +67,21 @@ export class ResourceManager {
     // リソースがあるかチェック
     has(resource, amount) {
         // 動的にリソースを追加
-        if (!this.resources[resource]) {
-            this.resources[resource] = { current: 0, max: 1000 };
+        if (!this.resources.has(resource)) {
+            this.resources.set(resource, { current: 0, max: 1000 });
         }
-        return this.resources[resource].current >= amount;
+        return this.resources.get(resource).current >= amount;
     }
 
     // 特定のリソースを取得
     getResource(type) {
-        return this.resources[type] ? this.resources[type].current : 0;
+        return this.resources.has(type) ? this.resources.get(type).current : 0;
     }
 
     // すべてのリソースを取得
     getAllResources() {
         const result = {};
-        for (const [key, resource] of Object.entries(this.resources)) {
+        for (const [key, resource] of this.resources.entries()) {
             result[key] = resource.current;
         }
         return result;
@@ -83,8 +89,11 @@ export class ResourceManager {
 
     // ストレージ容量の更新
     updateStorageCapacity(type, additionalCapacity) {
-        if (this.resources[type] && this.resources[type].max) {
-            this.resources[type].max += additionalCapacity;
+        if (this.resources.has(type)) {
+            const resource = this.resources.get(type);
+            if (resource.max) {
+                resource.max += additionalCapacity;
+            }
         }
     }
 
@@ -109,6 +118,18 @@ export class ResourceManager {
     notifyListeners(event, data) {
         if (this.listeners.has(event)) {
             this.listeners.get(event).forEach(callback => callback(data));
+        }
+    }
+    
+    // リソースを設定（セーブ/ロード用）
+    setResource(id, current, max) {
+        if (!this.resources.has(id)) {
+            this.resources.set(id, { current: 0, max: max || 999 });
+        }
+        const resource = this.resources.get(id);
+        resource.current = current;
+        if (max !== undefined) {
+            resource.max = max;
         }
     }
 }

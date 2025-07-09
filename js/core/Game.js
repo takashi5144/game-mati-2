@@ -13,6 +13,8 @@ import { ToolSystem } from '../systems/ToolSystem.js';
 import { CursorVisualizer } from '../ui/CursorVisualizer.js';
 import { FarmingSystem } from '../systems/FarmingSystem.js';
 import { ProductionSystem } from '../systems/ProductionSystem.js';
+import { SaveLoadSystem } from '../systems/SaveLoadSystem.js';
+import { SaveLoadUI } from '../ui/SaveLoadUI.js';
 
 export class Game {
     constructor(config) {
@@ -42,6 +44,8 @@ export class Game {
         this.timeSystem = null;
         this.terrainGenerator = null;
         this.eventSystem = null;
+        this.saveLoadSystem = null;
+        this.saveLoadUI = null;
         
         // ゲーム状態
         this.selectedObject = null;
@@ -124,6 +128,14 @@ export class Game {
         
         // 生産システム
         this.productionSystem = new ProductionSystem();
+        
+        // セーブ/ロードシステム
+        this.saveLoadSystem = new SaveLoadSystem(this);
+        this.saveLoadSystem.init();
+        
+        // セーブ/ロードUI
+        this.saveLoadUI = new SaveLoadUI(this.ui, this.saveLoadSystem);
+        this.saveLoadUI.init();
     }
 
     async generateWorld() {
@@ -333,6 +345,37 @@ export class Game {
             this.renderer.camera.updateProjectionMatrix();
             this.renderer.renderer.setSize(window.innerWidth, window.innerHeight);
         }
+    }
+    
+    // ゲーム速度の設定
+    setGameSpeed(speed) {
+        this.gameSpeed = speed;
+        this.ui?.updateSpeedButtons(speed);
+    }
+    
+    // ポーズ切り替え
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        this.ui?.updatePauseButton(this.isPaused);
+    }
+    
+    // 変更フラグをセット
+    setHasChanges(value) {
+        this.hasChanges = value;
+    }
+    
+    // カメラアクセサ
+    get camera() {
+        return this.renderer?.camera;
+    }
+    
+    get controls() {
+        return this.inputHandler;
+    }
+    
+    // シーンアクセサ
+    get scene() {
+        return this.sceneManager?.scene;
     }
 
 }

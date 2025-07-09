@@ -64,6 +64,22 @@ export class UIManager {
             this.game.togglePause();
         });
         
+        // セーブ/ロードボタン
+        const btnSave = document.getElementById('btn-save');
+        const btnLoad = document.getElementById('btn-load');
+        
+        if (btnSave) {
+            btnSave.addEventListener('click', () => {
+                this.game.saveLoadUI.open('save');
+            });
+        }
+        
+        if (btnLoad) {
+            btnLoad.addEventListener('click', () => {
+                this.game.saveLoadUI.open('load');
+            });
+        }
+        
         // ウィンドウの閉じるボタン
         document.querySelectorAll('.window-close').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -94,8 +110,8 @@ export class UIManager {
         const basicResources = ['food', 'wood', 'stone', 'iron', 'money'];
         basicResources.forEach(resource => {
             const element = this.elements.get(`resource-${resource}`);
-            if (element && resources[resource]) {
-                element.textContent = Math.floor(resources[resource].current);
+            if (element && resources.has(resource)) {
+                element.textContent = Math.floor(resources.get(resource).current);
             }
         });
         
@@ -104,8 +120,8 @@ export class UIManager {
         const cropResources = ['wheat', 'corn'];
         cropResources.forEach(resource => {
             const element = document.getElementById(`resource-${resource}`);
-            if (element && resources[resource]) {
-                element.textContent = Math.floor(resources[resource].current);
+            if (element && resources.has(resource)) {
+                element.textContent = Math.floor(resources.get(resource).current);
             }
         });
     }
